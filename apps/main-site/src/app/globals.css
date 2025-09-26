@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    /* Pinkish Theme */
+    --background: 345 70% 96%; /* Very light pink (almost white with pink tint) */
+    --foreground: 340 40% 25%; /* Dark, desaturated berry for text */
+    
+    --card: 345 65% 98%; /* Slightly off-light pink for cards */
+    --card-foreground: 340 40% 25%;
+    
+    --popover: 345 65% 98%;
+    --popover-foreground: 340 40% 25%;
+    
+    --primary: 340 80% 65%; /* Main vibrant pink */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    
+    --secondary: 340 70% 88%; /* Lighter, softer pink */
+    --secondary-foreground: 340 50% 30%; /* Darker pink text on secondary */
+    
+    --muted: 345 50% 90%; /* Muted pink */
+    --muted-foreground: 340 30% 50%; /* Darker muted text */
+    
+    --accent: 320 75% 70%; /* A slightly different, vibrant pink/magenta for accents */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 340 60% 85%; /* Pinkish border */
+    --input: 345 60% 94%; /* Light pinkish for input background */
+    --ring: 340 80% 65%; /* Main pink for rings */
+
+    --chart-1: 340 80% 65%; /* primary */
+    --chart-2: 320 75% 70%; /* accent */
+    --chart-3: 340 60% 75%; 
+    --chart-4: 330 50% 60%;
+    --chart-5: 350 70% 70%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar specific colors - can be adjusted if sidebar is heavily used */
+    --sidebar-background: 345 70% 95%; /* Slightly darker light pink for sidebar */
+    --sidebar-foreground: 340 40% 25%;
+    --sidebar-primary: 340 80% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 320 75% 70%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 340 60% 85%;
+    --sidebar-ring: 340 80% 65%;
+  }
+
+  .dark {
+    /* A basic dark theme with pink accents */
+    --background: 240 10% 10%; /* Dark blue-gray */
+    --foreground: 340 30% 85%; /* Light pinkish text */
+    
+    --card: 240 10% 12%;
+    --card-foreground: 340 30% 85%;
+    
+    --popover: 240 10% 12%;
+    --popover-foreground: 340 30% 85%;
+    
+    --primary: 340 70% 60%; /* Pink for primary actions */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 340 50% 30%; /* Darker pink for secondary elements */
+    --secondary-foreground: 340 30% 80%;
+    
+    --muted: 240 10% 20%;
+    --muted-foreground: 240 10% 60%;
+    
+    --accent: 320 70% 65%; /* Accent pink/magenta */
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 10% 25%;
+    --input: 240 10% 22%;
+    --ring: 340 70% 60%;
+
+    --sidebar-background: 240 10% 12%;
+    --sidebar-foreground: 340 30% 85%;
+    --sidebar-primary: 340 70% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 320 70% 65%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 10% 25%;
+    --sidebar-ring: 340 70% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar for a more integrated feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background) / 0.5);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--secondary));
+}

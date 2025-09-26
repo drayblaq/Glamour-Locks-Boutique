@@ -1,0 +1,168 @@
+[
+  {
+    "orderNumber": "GLB-1753802383064-L3436",
+    "orderDate": "2025-07-29T15:19:43.064Z",
+    "customer": {
+      "firstName": "dare",
+      "lastName": "alabi",
+      "email": "dray@gmail.com",
+      "phone": "84894189",
+      "address": "^kpdpo",
+      "city": "nedjnze",
+      "state": "eiidd",
+      "zipCode": "12345",
+      "country": "",
+      "specialInstructions": " jrioaevhio&é"
+    },
+    "items": [
+      {
+        "id": "TyjqnCEVPGBPFTTt9nME",
+        "name": "waxikololo",
+        "description": "waxed hair product",
+        "price": 25,
+        "images": [
+          "https://res.cloudinary.com/dl1ntqlyk/image/upload/v1752060622/vaatdp5tylypbvl44cbr.webp"
+        ],
+        "stock": 5,
+        "createdAt": "2025-07-06T17:14:17.685Z",
+        "updatedAt": "2025-07-11T11:34:13.307Z",
+        "quantity": 100
+      }
+    ],
+    "subtotal": 2500,
+    "shipping": 0,
+    "total": 2500,
+    "emailSent": false,
+    "status": "completed",
+    "paymentMethod": "stripe",
+    "id": "1753802383199",
+    "createdAt": "2025-07-29T15:19:43.199Z",
+    "updatedAt": "2025-07-29T15:20:49.468Z"
+  },
+  {
+    "id": "1752221271104",
+    "orderNumber": "GLB-1752221271031-45KLU",
+    "orderDate": "2025-07-11T08:07:51.031Z",
+    "customer": {
+      "firstName": "",
+      "lastName": "",
+      "email": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "state": "",
+      "zipCode": "",
+      "country": "",
+      "specialInstructions": ""
+    },
+    "items": [
+      {
+        "id": "TyjqnCEVPGBPFTTt9nME",
+        "name": "waxx",
+        "price": 90,
+        "image": "https://res.cloudinary.com/dl1ntqlyk/image/upload/v1752060622/vaatdp5tylypbvl44cbr.webp",
+        "images": [
+          "https://res.cloudinary.com/dl1ntqlyk/image/upload/v1752060622/vaatdp5tylypbvl44cbr.webp"
+        ],
+        "description": "waxxxxx ooo the hair",
+        "quantity": 1,
+        "stock": 500,
+        "createdAt": "2025-07-06T17:14:17.685Z",
+        "updatedAt": "2025-07-09T11:32:18.789Z"
+      }
+    ],
+    "subtotal": 90,
+    "shipping": 0,
+    "total": 90,
+    "emailSent": false,
+    "status": "completed",
+    "paymentId": "",
+    "paymentMethod": "",
+    "createdAt": "2025-07-11T08:07:51.104Z",
+    "updatedAt": "2025-07-13T02:29:54.983Z"
+  },
+  {
+    "id": "1752163437538",
+    "orderNumber": "GLB-1752163437436-X0AL8",
+    "orderDate": "2025-07-10T16:03:57.436Z",
+    "customer": {
+      "firstName": "",
+      "lastName": "",
+      "email": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "state": "",
+      "zipCode": "",
+      "country": "",
+      "specialInstructions": ""
+    },
+    "items": [
+      {
+        "id": "GXbk01EZoWxYMiiJDFCU",
+        "name": "Kaima hair wax",
+        "price": 22,
+        "image": "https://allinonestore.ng/public/uploads/all/8A4LZyyPXJeCgJWpBDLlTDY7GnmYMa8y0cNbmuVr.jpg",
+        "images": [
+          "https://allinonestore.ng/public/uploads/all/8A4LZyyPXJeCgJWpBDLlTDY7GnmYMa8y0cNbmuVr.jpg"
+        ],
+        "description": "hair wax",
+        "quantity": 1,
+        "stock": 100,
+        "createdAt": "2025-07-06T17:17:20.171Z",
+        "updatedAt": "2025-07-08T09:15:25.912Z"
+      }
+    ],
+    "subtotal": 22,
+    "shipping": 0,
+    "total": 22,
+    "emailSent": false,
+    "status": "completed",
+    "paymentId": "",
+    "paymentMethod": "stripe",
+    "createdAt": "2025-07-10T16:03:57.538Z",
+    "updatedAt": "2025-07-13T02:29:41.045Z"
+  },
+  {
+    "id": "1752142500998",
+    "orderNumber": "GLB-1752142500887-CV3MO",
+    "orderDate": "July 10, 2025 at 11:15 AM",
+    "customer": {
+      "firstName": "sam",
+      "lastName": "loco",
+      "email": "sam@gmail.com",
+      "phone": "78789845",
+      "address": "oke aro street",
+      "city": "lagos",
+      "state": "lagos",
+      "zipCode": "12345",
+      "country": "",
+      "specialInstructions": "just  to see if site works"
+    },
+    "items": [
+      {
+        "id": "GXbk01EZoWxYMiiJDFCU",
+        "name": "Kaima hair wax",
+        "price": 22,
+        "image": "https://allinonestore.ng/public/uploads/all/8A4LZyyPXJeCgJWpBDLlTDY7GnmYMa8y0cNbmuVr.jpg",
+        "images": [
+          "https://allinonestore.ng/public/uploads/all/8A4LZyyPXJeCgJWpBDLlTDY7GnmYMa8y0cNbmuVr.jpg"
+        ],
+        "description": "hair wax",
+        "quantity": 2,
+        "stock": 100,
+        "createdAt": "2025-07-06T17:17:20.171Z",
+        "updatedAt": "2025-07-08T09:15:25.912Z"
+      }
+    ],
+    "subtotal": 44,
+    "shipping": 0,
+    "total": 44,
+    "emailSent": false,
+    "status": "completed",
+    "paymentId": "",
+    "paymentMethod": "",
+    "createdAt": "2025-07-10T10:15:00.998Z",
+    "updatedAt": "2025-07-10T14:21:05.450Z"
+  }
+]

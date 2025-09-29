@@ -74,4 +74,6 @@ pids
 *~
 
 # OS
-Thumbs.db
+Thumbs.db.env.local
+.env.local
+.env.local

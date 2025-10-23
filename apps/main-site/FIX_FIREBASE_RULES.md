@@ -64,3 +64,8 @@ This is the ONLY thing you need to do. Your project will work perfectly after th
 **I'm sorry for the confusion with the temp auth system. This Firebase rules fix will solve everything!** 🔥
 
 
+
+
+
+
+

@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import Logo from '@/components/layout/Logo';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/components/Providers';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
 const MobileNav = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const { user, loading } = useUser();
+  const { customer, isAuthenticated, loading } = useCustomerAuth();
 
   const navigationLinks = [
     { href: '/', label: 'Home', icon: <Home className="w-4 h-4" /> },
@@ -87,7 +87,7 @@ const MobileNav = () => {
                 <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-500 mb-1"></span>
                 <span className="text-pink-500 font-medium text-xs">Loading...</span>
               </div>
-            ) : !user ? (
+            ) : !isAuthenticated ? (
                 <Button asChild className="w-full justify-start text-xs font-medium py-1.5 px-2 h-auto bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-md transition-all duration-200 gap-1 min-h-[32px] active:scale-95">
                   <Link href="/login" onClick={() => setIsOpen(false)}>
                     <LogIn className="w-3 h-3" />

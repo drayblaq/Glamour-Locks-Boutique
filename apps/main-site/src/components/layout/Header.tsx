@@ -15,14 +15,14 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { LogOut } from 'lucide-react';
-import { useUser } from '@/components/Providers';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { LogIn, UserPlus } from 'lucide-react';
 
 const Header = () => {
   const pathname = usePathname();
   const { data: session } = useSession();
   const router = useRouter();
-  const { user } = useUser();
+  const { customer, isAuthenticated } = useCustomerAuth();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -110,7 +110,7 @@ const Header = () => {
           </div>
           {/* Auth Buttons - Desktop only */}
           <div className="hidden lg:flex items-center gap-2 ml-4">
-            {!user ? (
+            {!isAuthenticated ? (
               <>
                 <Button asChild size="sm" className="bg-white/20 hover:bg-white/30 text-white border border-white/30">
                   <Link href="/login">
@@ -129,12 +129,10 @@ const Header = () => {
               <Button 
                 size="sm" 
                 className="bg-white/20 hover:bg-white/30 text-white border border-white/30"
-                onClick={async () => { 
-                  await import('firebase/auth').then(({ signOut }) => signOut(require('@/lib/firebase').auth)); 
-                }}
+                onClick={() => router.push('/account')}
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
+                <UserPlus className="w-4 h-4 mr-2" />
+                Mon Compte
               </Button>
             )}
           </div>

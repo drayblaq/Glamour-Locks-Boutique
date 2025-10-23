@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
 export default function CustomerLoginPage() {
   const [email, setEmail] = useState('');
@@ -17,6 +18,7 @@ export default function CustomerLoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { login } = useCustomerAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,28 +26,13 @@ export default function CustomerLoginPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/customer/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password: password
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Store token in localStorage
-        localStorage.setItem('customerToken', data.token);
-        localStorage.setItem('customer', JSON.stringify(data.customer));
-        
+      const result = await login(email, password);
+      
+      if (result.success) {
         // Redirect to home page
         router.push('/');
       } else {
-        setError(data.error || 'Login failed');
+        setError(result.error || 'Login failed');
       }
     } catch (error) {
       setError('Network error. Please try again.');

@@ -12,6 +12,16 @@ export const metadata: Metadata = {
   title: 'Glamour Locks Boutique - Natural Hair Care Products',
   description: 'Discover premium natural hair care products at Glamour Locks Boutique. Shop our curated collection of organic, nourishing hair care solutions.',
   keywords: 'natural hair care, organic hair products, hair care, beauty, boutique',
+  icons: {
+    icon: [
+      { url: '/favicon.png' },
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.png', sizes: '16x16', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/favicon.png', sizes: '180x180', type: 'image/png' }
+    ]
+  },
   authors: [{ name: 'Glamour Locks Boutique' }],
   creator: 'Glamour Locks Boutique',
   publisher: 'Glamour Locks Boutique',
@@ -28,9 +38,9 @@ export const metadata: Metadata = {
     siteName: 'Glamour Locks Boutique',
     images: [
       {
-        url: '/logo.jpg',
+        url: '/favicon.png',
         width: 1200,
-        height: 630,
+        height: 1200,
         alt: 'Glamour Locks Boutique',
       },
     ],

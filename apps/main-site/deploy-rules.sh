@@ -15,3 +15,8 @@ echo "✅ Firebase rules deployed successfully!"
 echo "🔧 Customer authentication should now work properly."
 
 
+
+
+
+
+

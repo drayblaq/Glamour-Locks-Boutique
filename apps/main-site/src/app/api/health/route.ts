@@ -4,7 +4,7 @@ import { HealthChecker, logger } from '@/lib/monitoring';
 
 export async function GET(request: NextRequest) {
   try {
-    logger.info('Health check requested', { ip: request.ip });
+    logger.info('Health check requested', { ip: request.headers.get('x-forwarded-for') || 'unknown' });
 
     // Run comprehensive health checks
     const healthChecks = await HealthChecker.runAllChecks();

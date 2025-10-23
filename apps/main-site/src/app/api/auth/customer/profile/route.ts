@@ -1,38 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ServerTempAuthService } from '@/lib/server-temp-auth';
 import { CustomerAuthService } from '@/lib/customer-auth';
-import { TempAuthService } from '@/lib/temp-auth';
 import { getSecurityHeaders } from '@/lib/security';
 import { logger } from '@/lib/monitoring';
-import jwt from 'jsonwebtoken';
 
-// Helper function to verify JWT token
-function verifyToken(request: NextRequest): { customerId: string; email: string } | null {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return null;
-    }
-
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any;
-    
-    if (decoded.type !== 'customer') {
-      return null;
-    }
-
-    return { customerId: decoded.customerId, email: decoded.email };
-  } catch (error) {
-    return null;
-  }
-}
-
-// GET - Get customer profile
 export async function GET(request: NextRequest) {
   try {
-    const tokenData = verifyToken(request);
-    if (!tokenData) {
+    // Authenticate the request
+    const authResult = await ServerTempAuthService.authenticateRequest(request, 'customer');
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: authResult.error || 'Authentication failed' },
         { 
           status: 401,
           headers: getSecurityHeaders()
@@ -40,9 +18,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use Firebase database (your original system)
-    const customer = await CustomerAuthService.getCustomerById(tokenData.customerId);
-    
+    // Get customer profile
+    const customer = await CustomerAuthService.getCustomerById(authResult.userId!);
     if (!customer) {
       return NextResponse.json(
         { error: 'Customer not found' },
@@ -53,8 +30,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    logger.info('Customer profile retrieved', { 
+      customerId: customer.id,
+      email: customer.email 
+    });
+
     return NextResponse.json(
       { 
+        success: true,
         customer: {
           id: customer.id,
           email: customer.email,
@@ -62,15 +45,16 @@ export async function GET(request: NextRequest) {
           lastName: customer.lastName,
           phone: customer.phone,
           address: customer.address,
-          createdAt: customer.createdAt
+          createdAt: customer.createdAt,
+          updatedAt: customer.updatedAt
         }
       },
       { headers: getSecurityHeaders() }
     );
   } catch (error) {
-    logger.error('Get customer profile error', error);
+    logger.error('Profile API error', error);
     return NextResponse.json(
-      { error: 'Failed to get profile' },
+      { error: 'Failed to retrieve profile' },
       { 
         status: 500,
         headers: getSecurityHeaders()
@@ -79,13 +63,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT - Update customer profile
 export async function PUT(request: NextRequest) {
   try {
-    const tokenData = verifyToken(request);
-    if (!tokenData) {
+    // Authenticate the request
+    const authResult = await ServerTempAuthService.authenticateRequest(request, 'customer');
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: authResult.error || 'Authentication failed' },
         { 
           status: 401,
           headers: getSecurityHeaders()
@@ -97,9 +81,9 @@ export async function PUT(request: NextRequest) {
     const { firstName, lastName, phone, address } = body;
 
     // Validate input
-    if (!firstName || !lastName) {
+    if (firstName && typeof firstName !== 'string') {
       return NextResponse.json(
-        { error: 'First name and last name are required' },
+        { error: 'First name must be a string' },
         { 
           status: 400,
           headers: getSecurityHeaders()
@@ -107,19 +91,28 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updates = {
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      phone: phone?.trim(),
-      address: address
-    };
+    if (lastName && typeof lastName !== 'string') {
+      return NextResponse.json(
+        { error: 'Last name must be a string' },
+        { 
+          status: 400,
+          headers: getSecurityHeaders()
+        }
+      );
+    }
 
-    // Use Firebase database (your original system)
-    const result = await CustomerAuthService.updateCustomer(tokenData.customerId, updates);
+    // Update customer profile
+    const result = await CustomerAuthService.updateCustomer(authResult.userId!, {
+      firstName,
+      lastName,
+      phone,
+      address
+    });
 
     if (result.success) {
       logger.info('Customer profile updated', { 
-        customerId: tokenData.customerId 
+        customerId: authResult.userId,
+        email: authResult.email 
       });
 
       return NextResponse.json(
@@ -131,14 +124,15 @@ export async function PUT(request: NextRequest) {
             firstName: result.customer?.firstName,
             lastName: result.customer?.lastName,
             phone: result.customer?.phone,
-            address: result.customer?.address
+            address: result.customer?.address,
+            updatedAt: result.customer?.updatedAt
           }
         },
         { headers: getSecurityHeaders() }
       );
     } else {
       return NextResponse.json(
-        { error: result.error },
+        { error: result.error || 'Update failed' },
         { 
           status: 400,
           headers: getSecurityHeaders()
@@ -146,7 +140,7 @@ export async function PUT(request: NextRequest) {
       );
     }
   } catch (error) {
-    logger.error('Update customer profile error', error);
+    logger.error('Profile update API error', error);
     return NextResponse.json(
       { error: 'Failed to update profile' },
       { 
@@ -156,4 +150,3 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-

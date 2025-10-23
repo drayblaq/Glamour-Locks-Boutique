@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,8 +15,31 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // Main site authentication - no admin logic needed
-        // You can add customer authentication logic here if needed
+        // Environment variables
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+
+        // Admin login
+        if (credentials.email === adminEmail) {
+          if (!adminPasswordHash) {
+            return null;
+          }
+          const isValidPassword = await bcrypt.compare(
+            credentials.password,
+            adminPasswordHash
+          );
+          if (!isValidPassword) {
+            return null;
+          }
+          return {
+            id: '1',
+            email: adminEmail,
+            name: 'Admin',
+            isAdmin: true,
+          };
+        }
+
+        // Customer authentication is handled separately via API routes
         return null;
       },
     }),
@@ -23,6 +47,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.isAdmin = (user as any).isAdmin;
         token.id = user.id;
       }
       return token;
@@ -30,12 +55,13 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.isAdmin = token.isAdmin as boolean;
       }
       return session;
     },
   },
   pages: {
-    signIn: '/login',
+    signIn: '/admin/login',
   },
   session: {
     strategy: 'jwt',

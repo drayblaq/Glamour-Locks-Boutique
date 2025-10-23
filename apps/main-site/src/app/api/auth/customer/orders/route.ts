@@ -1,38 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ServerTempAuthService } from '@/lib/server-temp-auth';
 import { CustomerAuthService } from '@/lib/customer-auth';
-import { TempAuthService } from '@/lib/temp-auth';
 import { getSecurityHeaders } from '@/lib/security';
 import { logger } from '@/lib/monitoring';
-import jwt from 'jsonwebtoken';
 
-// Helper function to verify JWT token
-function verifyToken(request: NextRequest): { customerId: string; email: string } | null {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return null;
-    }
-
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any;
-    
-    if (decoded.type !== 'customer') {
-      return null;
-    }
-
-    return { customerId: decoded.customerId, email: decoded.email };
-  } catch (error) {
-    return null;
-  }
-}
-
-// GET - Get customer orders
 export async function GET(request: NextRequest) {
   try {
-    const tokenData = verifyToken(request);
-    if (!tokenData) {
+    // Authenticate the request
+    const authResult = await ServerTempAuthService.authenticateRequest(request, 'customer');
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: authResult.error || 'Authentication failed' },
         { 
           status: 401,
           headers: getSecurityHeaders()
@@ -40,32 +18,36 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // For now, return empty orders array since we're using temp auth
-    const orders: any[] = [];
-
-    // Sort orders by date (newest first)
-    const sortedOrders = orders.sort((a, b) => {
-      const dateA = new Date(a.createdAt || a.orderDate);
-      const dateB = new Date(b.createdAt || b.orderDate);
-      return dateB.getTime() - dateA.getTime();
-    });
+    // Get customer orders
+    const orders = await CustomerAuthService.getCustomerOrders(authResult.userId!);
 
     logger.info('Customer orders retrieved', { 
-      customerId: tokenData.customerId,
+      customerId: authResult.userId,
       orderCount: orders.length 
     });
 
     return NextResponse.json(
       { 
-        orders: sortedOrders,
-        total: orders.length
+        success: true,
+        orders: orders.map(order => ({
+          id: order.id,
+          orderNumber: order.orderNumber,
+          items: order.items,
+          total: order.total,
+          status: order.status,
+          shippingAddress: order.shippingAddress,
+          billingAddress: order.billingAddress,
+          paymentMethod: order.paymentMethod,
+          createdAt: order.createdAt,
+          updatedAt: order.updatedAt
+        }))
       },
       { headers: getSecurityHeaders() }
     );
   } catch (error) {
-    logger.error('Get customer orders error', error);
+    logger.error('Orders API error', error);
     return NextResponse.json(
-      { error: 'Failed to get orders' },
+      { error: 'Failed to retrieve orders' },
       { 
         status: 500,
         headers: getSecurityHeaders()
@@ -73,4 +55,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

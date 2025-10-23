@@ -9,9 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useCustomerAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -69,29 +71,21 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/customer/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
-          email: formData.email.trim().toLowerCase(),
-          phone: formData.phone.trim() || undefined,
-          password: formData.password
-        }),
+      const result = await register({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim() || undefined,
+        password: formData.password
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (result.success) {
         setSuccess('Registration successful! You can now log in.');
         setTimeout(() => {
           router.push('/login');
         }, 2000);
       } else {
-        setError(data.error || 'Registration failed');
+        setError(result.error || 'Registration failed');
       }
     } catch (error) {
       setError('Network error. Please try again.');

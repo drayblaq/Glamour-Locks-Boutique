@@ -11,7 +11,7 @@ export interface RateLimitConfig {
 
 export function rateLimit(config: RateLimitConfig) {
   return (req: NextRequest): { success: boolean; message?: string; retryAfter?: number } => {
-    const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const now = Date.now();
     const key = `${ip}:${req.nextUrl.pathname}`;
     
@@ -137,6 +137,11 @@ setInterval(() => {
     }
   }
 }, 60000); // Clean up every minute
+
+
+
+
+
 
 
 

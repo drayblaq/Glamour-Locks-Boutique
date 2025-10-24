@@ -116,35 +116,6 @@ Glamour Locks Boutique is a full-stack e-commerce web application. It allows cus
 - **Orders:** View, update status, email customers.
 - **Email:** Send custom emails to customers.
 
----
-
-## Environment Variables
-
-Copy `env.example` to `.env.local` and configure:
-
-```bash
-# Admin Authentication
-ADMIN_EMAIL=your-admin@example.com
-ADMIN_PASSWORD_HASH=your-hashed-password-here
-NEXTAUTH_SECRET=your-nextauth-secret-here
-NEXTAUTH_URL=http://localhost:3000
-
-# Stripe Configuration
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
-
-# Email Configuration (Choose one or more)
-RESEND_API_KEY=your_resend_api_key_here
-RESEND_FROM_EMAIL=noreply@yourdomain.com
-SENDGRID_API_KEY=your_sendgrid_api_key_here
-FROM_EMAIL=noreply@yourdomain.com
-FORMSPREE_ENDPOINT=https://formspree.io/f/your_form_id
-
-# Application Configuration
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-```
-
 Use `/src/scripts/setup-admin.js` to generate admin credentials.
 
 ---
@@ -168,8 +139,8 @@ Use `/src/scripts/setup-admin.js` to generate admin credentials.
    ```
 
 4. **Access site:**
-   - Storefront: [http://localhost:3000](http://localhost:3000)
-   - Admin: [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
+   - Storefront: [http://localhost:9002](http://localhost:9002)
+   - Admin: [http://localhost:9003/admin/login](http://localhost:9003/admin/login)
 
 ---
 

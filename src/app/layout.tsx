@@ -14,12 +14,16 @@ export const metadata: Metadata = {
   keywords: 'natural hair care, organic hair products, hair care, beauty, boutique',
   icons: {
     icon: [
-      { url: '/favicon.png' },
-      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon.png', sizes: '16x16', type: 'image/png' }
+      { url: '/favicon.ico' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
     ],
     apple: [
-      { url: '/favicon.png', sizes: '180x180', type: 'image/png' }
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ],
+    other: [
+      { url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' }
     ]
   },
   authors: [{ name: 'Glamour Locks Boutique' }],
@@ -38,9 +42,9 @@ export const metadata: Metadata = {
     siteName: 'Glamour Locks Boutique',
     images: [
       {
-        url: '/favicon.png',
-        width: 1200,
-        height: 1200,
+        url: '/logo.jpeg',
+        width: 500,
+        height: 500,
         alt: 'Glamour Locks Boutique',
       },
     ],
@@ -51,7 +55,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Glamour Locks Boutique - Natural Hair Care Products',
     description: 'Discover premium natural hair care products at Glamour Locks Boutique.',
-    images: ['/logo.jpg'],
+    images: ['/logo.jpeg'],
   },
   robots: {
     index: true,
@@ -78,6 +82,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body className={inter.className}>
         <ErrorBoundary>

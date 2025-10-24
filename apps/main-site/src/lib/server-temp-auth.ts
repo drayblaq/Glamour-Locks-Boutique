@@ -13,7 +13,7 @@ export interface TempAuthToken {
 }
 
 export class ServerTempAuthService {
-  private static readonly JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret';
+  private static readonly JWT_SECRET = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET || 'fallback-secret-for-development-only';
 
   // Create a temporary token
   static createTempToken(data: {
@@ -29,9 +29,9 @@ export class ServerTempAuthService {
         type: data.type
       };
 
-      return jwt.sign(payload, this.JWT_SECRET, {
+      return jwt.sign(payload, this.JWT_SECRET as string, {
         expiresIn: data.expiresIn || '1h'
-      });
+      } as jwt.SignOptions);
     } catch (error) {
       logger.error('Failed to create temp token', error);
       throw new Error('Token creation failed');
@@ -41,10 +41,10 @@ export class ServerTempAuthService {
   // Verify a temporary token
   static verifyTempToken(token: string): TempAuthToken | null {
     try {
-      const decoded = jwt.verify(token, this.JWT_SECRET) as TempAuthToken;
+      const decoded = jwt.verify(token, this.JWT_SECRET as string) as TempAuthToken;
       return decoded;
     } catch (error) {
-      logger.warn('Token verification failed', { error: error.message });
+      logger.warn('Token verification failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       return null;
     }
   }

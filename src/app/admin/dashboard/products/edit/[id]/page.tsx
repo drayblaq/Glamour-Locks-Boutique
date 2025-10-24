@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Save, Upload, Package, DollarSign, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Upload, Package, DollarSign, Loader2, Plus, Trash2, Palette } from "lucide-react";
 import Link from "next/link";
 import * as firestoreProductService from '@/lib/firestore/products';
 
@@ -97,6 +97,11 @@ interface ProductFormData {
   price: number;
   stock: number;
   images: string[];
+  variants: Array<{
+    color: string;
+    quantity: number;
+    images: string[];
+  }>;
 }
 
 interface ProductFormErrors {
@@ -105,6 +110,7 @@ interface ProductFormErrors {
   price?: string;
   stock?: string;
   images?: string;
+  variants?: string;
 }
 
 const initialFormData: ProductFormData = {
@@ -113,6 +119,7 @@ const initialFormData: ProductFormData = {
   price: 0,
   stock: 0,
   images: [],
+  variants: [],
 };
 
 export default function EditProductPage() {
@@ -140,6 +147,7 @@ export default function EditProductPage() {
           price: Number(product.price) || 0,
           stock: Number(product.stock) || 0,
           images: Array.isArray(product.images) ? product.images : [],
+          variants: Array.isArray(product.variants) ? product.variants : [],
         });
       } else {
         toast({
@@ -160,7 +168,18 @@ export default function EditProductPage() {
     if (!formData.description.trim()) newErrors.description = "Description is required";
     if (typeof formData.price === 'number' && formData.price <= 0) newErrors.price = "Price must be greater than 0";
     if (formData.stock < 0) newErrors.stock = "Stock cannot be negative";
-    if (formData.images.length === 0) newErrors.images = "At least one image is required";
+    if (formData.images.length === 0 && formData.variants.length === 0) newErrors.images = "At least one image is required";
+    
+    // Validate variants
+    if (formData.variants.length > 0) {
+      const hasInvalidVariant = formData.variants.some(variant => 
+        !variant.color.trim() || variant.quantity < 0
+      );
+      if (hasInvalidVariant) {
+        newErrors.variants = "All variants must have a color name and non-negative quantity";
+      }
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -177,12 +196,18 @@ export default function EditProductPage() {
     }
     setIsSubmitting(true);
     try {
+      // Calculate total stock from variants if they exist, otherwise use manual stock
+      const totalStock = formData.variants.length > 0 
+        ? formData.variants.reduce((sum, variant) => sum + variant.quantity, 0)
+        : formData.stock;
+
       await updateProduct(productId, {
         name: formData.name,
         description: formData.description,
         price: formData.price,
-        stock: formData.stock,
+        stock: totalStock,
         images: formData.images,
+        variants: formData.variants.length > 0 ? formData.variants : undefined,
       });
       toast({
         title: "Product Updated",
@@ -210,6 +235,51 @@ export default function EditProductPage() {
 
   const removeImage = (index: number) => {
     setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+  };
+
+  const addVariant = () => {
+    setFormData(prev => ({
+      ...prev,
+      variants: [...prev.variants, { color: "", quantity: 0, images: [] }]
+    }));
+  };
+
+  const removeVariant = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateVariant = (index: number, field: keyof ProductFormData['variants'][0], value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((variant, i) => 
+        i === index ? { ...variant, [field]: value } : variant
+      )
+    }));
+  };
+
+  const addVariantImage = (variantIndex: number, imageUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((variant, i) => 
+        i === variantIndex 
+          ? { ...variant, images: [...variant.images, imageUrl] }
+          : variant
+      )
+    }));
+  };
+
+  const removeVariantImage = (variantIndex: number, imageIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((variant, i) => 
+        i === variantIndex 
+          ? { ...variant, images: variant.images.filter((_, imgI) => imgI !== imageIndex) }
+          : variant
+      )
+    }));
   };
 
   if (loading || isLoading) {
@@ -314,20 +384,120 @@ export default function EditProductPage() {
               {errors.description && <p className="text-sm text-destructive mt-1">{errors.description}</p>}
             </div>
             <div>
-              <Label htmlFor="stock">Stock Quantity *</Label>
+              <Label htmlFor="stock">Stock Quantity {formData.variants.length > 0 ? "(Auto-calculated from variants)" : "*"}</Label>
               <Input
                 id="stock"
                 type="number"
                 min="0"
-                value={formData.stock}
+                value={formData.variants.length > 0 
+                  ? formData.variants.reduce((sum, variant) => sum + variant.quantity, 0)
+                  : formData.stock
+                }
                 onChange={(e) => handleInputChange("stock", parseInt(e.target.value) || 0)}
                 placeholder="0"
                 className={errors.stock ? "border-destructive" : ""}
+                disabled={formData.variants.length > 0}
               />
               {errors.stock && <p className="text-sm text-destructive mt-1">{errors.stock}</p>}
+              {formData.variants.length > 0 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Stock is automatically calculated from color variants
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
+        
+        {/* Color Variants */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="w-5 h-5" />
+              Color Variants
+            </CardTitle>
+            <CardDescription>
+              Add different colors and their quantities. Leave empty to use single stock quantity above.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">
+                {formData.variants.length === 0 
+                  ? "No color variants added. Using single stock quantity." 
+                  : `${formData.variants.length} color variant(s) added.`
+                }
+              </p>
+              <Button type="button" onClick={addVariant} variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Color Variant
+              </Button>
+            </div>
+            
+            {formData.variants.map((variant, index) => (
+              <div key={index} className="border rounded-lg p-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium">Color Variant {index + 1}</h4>
+                  <Button 
+                    type="button" 
+                    onClick={() => removeVariant(index)} 
+                    variant="outline" 
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor={`variant-color-${index}`}>Color Name *</Label>
+                    <Input
+                      id={`variant-color-${index}`}
+                      value={variant.color}
+                      onChange={(e) => updateVariant(index, "color", e.target.value)}
+                      placeholder="e.g., Black, Brown, Blonde"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`variant-quantity-${index}`}>Quantity *</Label>
+                    <Input
+                      id={`variant-quantity-${index}`}
+                      type="number"
+                      min="0"
+                      value={variant.quantity}
+                      onChange={(e) => updateVariant(index, "quantity", parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label>Color-Specific Images (Optional)</Label>
+                  <div className="mt-2">
+                    <CloudinaryImageUpload onUpload={(url) => addVariantImage(index, url)} />
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {variant.images.map((img, imgIdx) => (
+                        <div key={imgIdx} className="relative w-20 h-20">
+                          <img src={img} alt={`${variant.color} variant`} className="object-cover w-full h-full rounded" />
+                          <button 
+                            type="button" 
+                            onClick={() => removeVariantImage(index, imgIdx)} 
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {errors.variants && <p className="text-sm text-destructive mt-1">{errors.variants}</p>}
+          </CardContent>
+        </Card>
+        
         {/* Images */}
         <Card>
           <CardHeader>
@@ -335,7 +505,9 @@ export default function EditProductPage() {
               <Upload className="w-5 h-5" />
               Product Images
             </CardTitle>
-            <CardDescription>Upload images for your product</CardDescription>
+            <CardDescription>
+              Upload general product images. {formData.variants.length > 0 ? "These will be used as fallback images." : "At least one image is required."}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <CloudinaryImageUpload onUpload={url => setFormData(prev => ({ ...prev, images: [...prev.images, url] }))} />

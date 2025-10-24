@@ -77,6 +77,12 @@ export async function POST(request: NextRequest) {
     const result = await CustomerAuthService.registerCustomer(sanitizedData);
 
     if (result.success) {
+      // Create JWT token for the new customer
+      const token = ServerTempAuthService.createCustomerToken(
+        result.customer!.id,
+        result.customer!.email
+      );
+
       logger.info('Customer registered successfully', { 
         email: sanitizedData.email,
         customerId: result.customer?.id 
@@ -86,6 +92,7 @@ export async function POST(request: NextRequest) {
         { 
           success: true, 
           message: 'Registration successful',
+          token,
           customer: {
             id: result.customer?.id,
             email: result.customer?.email,

@@ -39,15 +39,14 @@ interface Order {
 
 export default function AccountPage() {
   const router = useRouter();
-  const { customer, logout, isAuthenticated, loading } = useCustomerAuth();
+  const { logout, isAuthenticated, loading } = useCustomerAuth();
   const { authenticatedFetch } = useAuthenticatedFetch();
-  
+
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [profileLoading, setProfileLoading] = useState(false);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -69,7 +68,7 @@ export default function AccountPage() {
     try {
       const response = await authenticatedFetch('/api/auth/customer/profile');
       const data = await response.json();
-      
+
       if (data.success) {
         setProfile(data.customer);
       } else {
@@ -87,7 +86,7 @@ export default function AccountPage() {
     try {
       const response = await authenticatedFetch('/api/auth/customer/orders');
       const data = await response.json();
-      
+
       if (data.success) {
         setOrders(data.orders);
       } else {
@@ -106,7 +105,7 @@ export default function AccountPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -114,9 +113,9 @@ export default function AccountPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'USD'
     }).format(amount);
   };
 
@@ -136,8 +135,8 @@ export default function AccountPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mon Compte</h1>
-          <p className="text-gray-600">Gérez vos informations et consultez vos commandes</p>
+          <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
+          <p className="text-gray-600">Manage your information and view your orders</p>
         </div>
 
         {error && (
@@ -146,11 +145,7 @@ export default function AccountPage() {
           </Alert>
         )}
 
-        {success && (
-          <Alert className="mb-6">
-            <AlertDescription>{success}</AlertDescription>
-          </Alert>
-        )}
+
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Section */}
@@ -159,10 +154,10 @@ export default function AccountPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Informations Personnelles
+                  Personal Information
                 </CardTitle>
                 <CardDescription>
-                  Vos informations de compte
+                  Your account information
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -174,11 +169,11 @@ export default function AccountPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label>Prénom</Label>
+                        <Label>First Name</Label>
                         <Input value={profile.firstName} disabled />
                       </div>
                       <div>
-                        <Label>Nom</Label>
+                        <Label>Last Name</Label>
                         <Input value={profile.lastName} disabled />
                       </div>
                     </div>
@@ -188,17 +183,17 @@ export default function AccountPage() {
                     </div>
                     {profile.phone && (
                       <div>
-                        <Label>Téléphone</Label>
+                        <Label>Phone</Label>
                         <Input value={profile.phone} disabled />
                       </div>
                     )}
                     <div className="text-sm text-gray-500">
-                      Membre depuis le {formatDate(profile.createdAt)}
+                      Member since {formatDate(profile.createdAt)}
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    Impossible de charger les informations du profil
+                    Unable to load profile information
                   </div>
                 )}
               </CardContent>
@@ -211,10 +206,10 @@ export default function AccountPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Package className="h-5 w-5" />
-                  Mes Commandes
+                  My Orders
                 </CardTitle>
                 <CardDescription>
-                  Historique de vos commandes
+                  Your order history
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -228,7 +223,7 @@ export default function AccountPage() {
                       <div key={order.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <p className="font-medium">Commande #{order.orderNumber}</p>
+                            <p className="font-medium">Order #{order.orderNumber}</p>
                             <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
                           </div>
                           <div className="text-right">
@@ -237,19 +232,19 @@ export default function AccountPage() {
                           </div>
                         </div>
                         <div className="text-sm text-gray-600">
-                          {order.items.length} article{order.items.length > 1 ? 's' : ''}
+                          {order.items.length} item{order.items.length > 1 ? 's' : ''}
                         </div>
                       </div>
                     ))}
                     {orders.length > 5 && (
                       <p className="text-sm text-gray-500 text-center">
-                        Et {orders.length - 5} autre{orders.length - 5 > 1 ? 's' : ''} commande{orders.length - 5 > 1 ? 's' : ''}...
+                        And {orders.length - 5} more order{orders.length - 5 > 1 ? 's' : ''}...
                       </p>
                     )}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    Aucune commande trouvée
+                    No orders found
                   </div>
                 )}
               </CardContent>
@@ -258,13 +253,13 @@ export default function AccountPage() {
             {/* Logout Button */}
             <Card className="mt-6">
               <CardContent className="pt-6">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleLogout}
                   className="w-full"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Se Déconnecter
+                  Sign Out
                 </Button>
               </CardContent>
             </Card>

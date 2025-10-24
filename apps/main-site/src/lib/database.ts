@@ -37,6 +37,12 @@ export interface Order {
   }>;
   subtotal: number;
   shipping: number;
+  shippingDetails?: {
+    optionId: string;
+    optionName: string;
+    estimatedDelivery: string;
+    trackingNumber?: string;
+  };
   total: number;
   emailSent: boolean;
   createdAt: string;

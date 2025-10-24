@@ -16,8 +16,13 @@ interface ProductListProps {
 export function ProductList({ products, loading, error }: ProductListProps) {
   const [mobileView, setMobileView] = useState<'vertical' | 'horizontal'>('vertical');
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
   useEffect(() => {
-    setIsMobile(window.innerWidth < 640);
+    setMounted(true);
+    if (typeof window !== 'undefined') {
+      setIsMobile(window.innerWidth < 640);
+    }
   }, []);
 
   if (loading) {
@@ -55,6 +60,17 @@ export function ProductList({ products, loading, error }: ProductListProps) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">No products found.</p>
+      </div>
+    );
+  }
+
+  // Don't render mobile-specific UI until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
       </div>
     );
   }

@@ -34,6 +34,7 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
   const product = products.find((p) => p.id === productId);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
 
   useEffect(() => {
     if (product) {
@@ -68,17 +69,55 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
   }
 
   const handleAddToCart = () => {
-    addItem({
+    // Check if variants exist and one is selected
+    if (product.variants && product.variants.length > 0) {
+      if (selectedVariant === null) {
+        toast({
+          title: "Please select a color",
+          description: "Choose a color variant before adding to cart.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const variant = product.variants[selectedVariant];
+      if (variant.quantity === 0) {
+        toast({
+          title: "Out of stock",
+          description: `${variant.color} is currently out of stock.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    // For variants, treat each color as a completely separate product
+    const cartItem = selectedVariant !== null && product.variants ? {
+      id: `${product.id}-${product.variants[selectedVariant].color.toLowerCase().replace(/\s+/g, '-')}`,
+      name: `${product.name} - ${product.variants[selectedVariant].color}`,
+      price: product.price,
+      image: selectedImage || product.images[0],
+      description: product.description,
+      variant: {
+        color: product.variants[selectedVariant].color,
+        variantId: `${product.id}-${product.variants[selectedVariant].color.toLowerCase().replace(/\s+/g, '-')}`
+      }
+    } : {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.images[0],
+      image: selectedImage || product.images[0],
       description: product.description
-    });
+    };
     
+    addItem(cartItem);
+    
+    const variantText = selectedVariant !== null && product.variants 
+      ? ` (${product.variants[selectedVariant].color})` 
+      : '';
     toast({
       title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
+      description: `${product.name}${variantText} has been added to your cart.`,
       variant: "default",
     });
   };
@@ -131,10 +170,62 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
         <div className="space-y-6 animate-in fade-in slide-in-from-right-12 duration-700 ease-out delay-100">
           <h1 className="text-3xl md:text-4xl font-bold text-primary">{product.name}</h1>
           <div className="flex items-center space-x-3">
-            <Badge variant={product.stock > 0 ? 'default' : 'destructive'} className="text-xs">
+            {product.variants && product.variants.length > 0 ? (
+              <>
+                <Badge variant="outline" className="text-xs">
+                  {product.variants.length} colors available
+                </Badge>
+                <Badge 
+                  variant={product.variants.reduce((sum, variant) => sum + variant.quantity, 0) > 0 ? 'default' : 'destructive'} 
+                  className="text-xs"
+                >
+                  {product.variants.reduce((sum, variant) => sum + variant.quantity, 0)} total units
+                </Badge>
+              </>
+            ) : (
+              <Badge variant={product.stock > 0 ? 'default' : 'destructive'} className="text-xs">
                 {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-            </Badge>
+              </Badge>
+            )}
           </div>
+          
+          {/* Color Variant Selector */}
+          {product.variants && product.variants.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Available Colors</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {product.variants.map((variant, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setSelectedVariant(index);
+                      // Update selected image to variant image if available
+                      if (variant.images && variant.images.length > 0) {
+                        setSelectedImage(variant.images[0]);
+                      }
+                    }}
+                    className={cn(
+                      "p-3 border-2 rounded-lg text-left transition-all duration-200 hover:shadow-md",
+                      selectedVariant === index 
+                        ? "border-primary bg-primary/5 shadow-md" 
+                        : "border-gray-200 hover:border-primary/50"
+                    )}
+                  >
+                    <div className="font-medium text-sm">{variant.color}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {variant.quantity > 0 ? `${variant.quantity} in stock` : 'Out of stock'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {selectedVariant !== null && (
+                <div className="text-sm text-muted-foreground">
+                  Selected: {product.variants[selectedVariant].color} 
+                  ({product.variants[selectedVariant].quantity} available)
+                </div>
+              )}
+            </div>
+          )}
           <p className="text-3xl font-semibold text-accent">£{product.price.toFixed(2)}</p>
           <p className="text-foreground/80 leading-relaxed">{product.description}</p>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -142,10 +233,22 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
                 size="lg" 
                 className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-3 px-8 shadow-md flex-grow transition-transform duration-200 hover:scale-105"
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={
+                  product.stock === 0 || 
+                  (product.variants && product.variants.length > 0 && 
+                    (selectedVariant === null || product.variants[selectedVariant]?.quantity === 0)
+                  )
+                }
             >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                {(() => {
+                  if (product.variants && product.variants.length > 0) {
+                    if (selectedVariant === null) return 'Select Color';
+                    if (product.variants[selectedVariant]?.quantity === 0) return 'Out of Stock';
+                    return 'Add to Cart';
+                  }
+                  return product.stock > 0 ? 'Add to Cart' : 'Out of Stock';
+                })()}
             </Button>
             <Button 
                 variant="outline" 
@@ -167,10 +270,22 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
           size="lg" 
           className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-3 px-8 shadow-md transition-transform duration-200 hover:scale-105"
           onClick={handleAddToCart}
-          disabled={product.stock === 0}
+          disabled={
+            product.stock === 0 || 
+            (product.variants && product.variants.length > 0 && 
+              (selectedVariant === null || product.variants[selectedVariant]?.quantity === 0)
+            )
+          }
         >
           <ShoppingCart className="mr-2 h-5 w-5" />
-          {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+          {(() => {
+            if (product.variants && product.variants.length > 0) {
+              if (selectedVariant === null) return 'Select Color';
+              if (product.variants[selectedVariant]?.quantity === 0) return 'Out of Stock';
+              return 'Add to Cart';
+            }
+            return product.stock > 0 ? 'Add to Cart' : 'Out of Stock';
+          })()}
         </Button>
         <Button 
           variant="outline" 

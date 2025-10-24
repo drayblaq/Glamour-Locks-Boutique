@@ -27,6 +27,7 @@ const docToProduct = (doc: QueryDocumentSnapshot<DocumentData>): Product => {
     price: Number(data.price) || 0,
     images: Array.isArray(data.images) ? data.images : [],
     stock: Number(data.stock) || 0,
+    variants: Array.isArray(data.variants) ? data.variants : undefined,
     createdAt: data.createdAt?.toDate?.() || new Date(),
     updatedAt: data.updatedAt?.toDate?.() || new Date(),
   };
@@ -34,7 +35,7 @@ const docToProduct = (doc: QueryDocumentSnapshot<DocumentData>): Product => {
 
 // Convert Product to Firestore document
 const productToDoc = (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
-  return {
+  const doc: any = {
     name: product.name,
     description: product.description,
     price: product.price,
@@ -43,6 +44,12 @@ const productToDoc = (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) 
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
+  
+  if (product.variants) {
+    doc.variants = product.variants;
+  }
+  
+  return doc;
 };
 
 // Get all products

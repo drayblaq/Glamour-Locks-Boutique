@@ -1,6 +1,7 @@
 "use client"; 
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,8 @@ import {
   Package,
   CheckCircle,
   MessageCircle,
-  Loader2
+  Loader2,
+  ArrowLeft
 } from 'lucide-react';
 
 interface ProductDetailPageProps {
@@ -34,11 +36,16 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
   const product = products.find((p) => p.id === productId);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
   useEffect(() => {
     if (product) {
       setSelectedImage(product.images[0] || null);
       document.title = `${product.name} - Glamour Locks Boutique`;
+      // Set first variant as default if variants exist
+      if (product.variants && product.variants.length > 0) {
+        setSelectedVariant(product.variants[0].color);
+      }
     } else if (!loading) {
       document.title = 'Product Not Found - Glamour Locks Boutique';
     }
@@ -68,19 +75,53 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
   }
 
   const handleAddToCart = () => {
+    const selectedVariantData = product.variants?.find(v => v.color === selectedVariant);
+    const productName = selectedVariant ? `${product.name} (${selectedVariant})` : product.name;
+    const productImage = selectedVariantData?.images?.[0] || product.images[0];
+    
     addItem({
       id: product.id,
-      name: product.name,
+      name: productName,
       price: product.price,
-      image: product.images[0],
+      image: productImage,
       description: product.description
     });
     
     toast({
       title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
+      description: `${productName} has been added to your cart.`,
       variant: "default",
     });
+  };
+
+  const handleVariantChange = (color: string) => {
+    setSelectedVariant(color);
+    const variant = product.variants?.find(v => v.color === color);
+    if (variant && variant.images.length > 0) {
+      setSelectedImage(variant.images[0]);
+    } else {
+      setSelectedImage(product.images[0] || null);
+    }
+  };
+
+  // Get current stock based on selected variant or total stock
+  const getCurrentStock = () => {
+    if (product.variants && selectedVariant) {
+      const variant = product.variants.find(v => v.color === selectedVariant);
+      return variant?.quantity || 0;
+    }
+    return product.stock;
+  };
+
+  // Get available images based on selected variant or product images
+  const getAvailableImages = () => {
+    if (product.variants && selectedVariant) {
+      const variant = product.variants.find(v => v.color === selectedVariant);
+      if (variant && variant.images.length > 0) {
+        return variant.images;
+      }
+    }
+    return product.images;
   };
 
   const handleWishlistToggle = () => {
@@ -93,6 +134,18 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 overflow-x-hidden">
+      {/* Back Button */}
+      <div className="mb-6">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => router.back()}
+          className="flex items-center gap-2 hover:bg-primary/10"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
+      </div>
       <div className="grid md:grid-cols-2 gap-8 md:gap-12">
         {/* Product Image Gallery */}
         <div className="space-y-4 animate-in fade-in slide-in-from-left-12 duration-700 ease-out">
@@ -108,9 +161,9 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
             />
           </div>
           {/* Swipeable thumbnails for mobile */}
-          {product.images.length > 1 && (
+          {getAvailableImages().length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory md:grid md:grid-cols-4 md:gap-3 md:overflow-x-visible md:pb-0">
-              {product.images.slice(0, 4).map((img, idx) => (
+              {getAvailableImages().slice(0, 4).map((img, idx) => (
                 <button 
                   key={idx} 
                   className={cn(
@@ -131,21 +184,52 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
         <div className="space-y-6 animate-in fade-in slide-in-from-right-12 duration-700 ease-out delay-100">
           <h1 className="text-3xl md:text-4xl font-bold text-primary">{product.name}</h1>
           <div className="flex items-center space-x-3">
-            <Badge variant={product.stock > 0 ? 'default' : 'destructive'} className="text-xs">
-                {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+            <Badge variant={getCurrentStock() > 0 ? 'default' : 'destructive'} className="text-xs">
+                {getCurrentStock() > 0 ? `${getCurrentStock()} in stock` : 'Out of stock'}
             </Badge>
           </div>
           <p className="text-3xl font-semibold text-accent">£{product.price.toFixed(2)}</p>
           <p className="text-foreground/80 leading-relaxed">{product.description}</p>
+          
+          {/* Color Variants */}
+          {product.variants && product.variants.length > 0 && (
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-lg font-semibold text-primary mb-2">
+                  Available Colors {selectedVariant && `(${selectedVariant})`}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {product.variants.map((variant) => (
+                    <Button
+                      key={variant.color}
+                      variant={selectedVariant === variant.color ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleVariantChange(variant.color)}
+                      className={cn(
+                        "transition-all duration-200",
+                        selectedVariant === variant.color 
+                          ? "bg-primary text-primary-foreground shadow-md" 
+                          : "hover:bg-primary/10"
+                      )}
+                      disabled={variant.quantity === 0}
+                    >
+                      {variant.color}
+                      {variant.quantity === 0 && " (Out of Stock)"}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row gap-3">
             <Button 
                 size="lg" 
                 className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-3 px-8 shadow-md flex-grow transition-transform duration-200 hover:scale-105"
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={getCurrentStock() === 0}
             >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                {getCurrentStock() > 0 ? 'Add to Cart' : 'Out of Stock'}
             </Button>
             <Button 
                 variant="outline" 
@@ -167,10 +251,10 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
           size="lg" 
           className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-3 px-8 shadow-md transition-transform duration-200 hover:scale-105"
           onClick={handleAddToCart}
-          disabled={product.stock === 0}
+          disabled={getCurrentStock() === 0}
         >
           <ShoppingCart className="mr-2 h-5 w-5" />
-          {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+          {getCurrentStock() > 0 ? 'Add to Cart' : 'Out of Stock'}
         </Button>
         <Button 
           variant="outline" 

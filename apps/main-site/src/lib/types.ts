@@ -18,6 +18,11 @@ export interface Product {
   discountPrice?: number; // Optional discounted price
   rating?: number; // Optional average rating (1-5)
   tags?: string[]; // Optional tags for badges (e.g., 'new', 'bestseller')
+  variants?: Array<{
+    color: string;
+    quantity: number;
+    images: string[];
+  }>;
 }
 
 export interface NavigationLink {

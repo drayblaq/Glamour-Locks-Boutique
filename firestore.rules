@@ -11,6 +11,16 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
+    // Allow read/write access to customers collection
+    match /customers/{document} {
+      allow read, write: if true;
+    }
+    
+    // Allow read/write access to customer_auth collection
+    match /customer_auth/{document} {
+      allow read, write: if true;
+    }
+    
     // Default rule - deny all other access
     match /{document=**} {
       allow read, write: if false;

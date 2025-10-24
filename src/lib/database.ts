@@ -9,6 +9,7 @@ import {
   getOrdersByStatus as getFirestoreOrdersByStatus,
   getOrderStats as getFirestoreOrderStats
 } from '@/lib/firestore/orders';
+import { CustomerShippingSelection } from '@/lib/types/shipping';
 
 export interface Order {
   id: string;
@@ -37,6 +38,7 @@ export interface Order {
   }>;
   subtotal: number;
   shipping: number;
+  shippingOption?: CustomerShippingSelection;
   total: number;
   emailSent: boolean;
   createdAt: string;

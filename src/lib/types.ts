@@ -6,13 +6,20 @@ export interface Review {
   date: string;
 }
 
+export interface ProductVariant {
+  color: string;
+  quantity: number;
+  images?: string[]; // Optional color-specific images
+}
+
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
   images: string[]; // URLs
-  stock: number;
+  stock: number; // Total stock across all variants
+  variants?: ProductVariant[]; // Color variants with quantities
   createdAt: Date;
   updatedAt: Date;
   discountPrice?: number; // Optional discounted price

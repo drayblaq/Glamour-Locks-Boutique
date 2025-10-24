@@ -4,10 +4,12 @@ import React, { useState, useRef } from 'react';
 import { useCart } from '@/app/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StripeCheckout from '@/components/StripeCheckout';
+import ShippingOptions from '@/components/checkout/ShippingOptions';
 import { useToast } from '@/hooks/use-toast';
 
-const steps = ['Cart', 'Info', 'Review', 'Payment'];
+const steps = ['Cart', 'Info', 'Shipping', 'Review', 'Payment'];
 
 function ProgressBar({ step }: { step: number }) {
   return (
@@ -32,8 +34,13 @@ export default function ModernCartPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [customerInfo, setCustomerInfo] = useState({
-    firstName: '', lastName: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '',
+    firstName: '', lastName: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', country: 'UK',
   });
+  const [selectedShipping, setSelectedShipping] = useState<{
+    optionId: string;
+    cost: number;
+    details: any;
+  } | null>(null);
   const [coupon, setCoupon] = useState('');
   const [selectedPayment, setSelectedPayment] = useState('stripe');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -180,8 +187,13 @@ export default function ModernCartPage() {
       },
       items: validItems, // Use validated items instead of orderItems
       subtotal: orderSubtotal,
-      shipping: 0,
-      total: orderSubtotal,
+      shipping: selectedShipping?.cost || 0,
+      shippingDetails: selectedShipping ? {
+        optionId: selectedShipping.optionId,
+        optionName: selectedShipping.details.optionName,
+        estimatedDelivery: selectedShipping.details.estimatedDelivery
+      } : undefined,
+      total: orderSubtotal + (selectedShipping?.cost || 0),
       emailSent: false,
       status: 'pending',
       paymentId: paymentId || '',
@@ -286,18 +298,67 @@ export default function ModernCartPage() {
           <Input placeholder="Phone" value={customerInfo.phone} onChange={e => setCustomerInfo({ ...customerInfo, phone: e.target.value })} />
           <Input placeholder="Address" value={customerInfo.address} onChange={e => setCustomerInfo({ ...customerInfo, address: e.target.value })} className="md:col-span-2" />
           <Input placeholder="City" value={customerInfo.city} onChange={e => setCustomerInfo({ ...customerInfo, city: e.target.value })} />
-          <Input placeholder="State" value={customerInfo.state} onChange={e => setCustomerInfo({ ...customerInfo, state: e.target.value })} />
-          <Input placeholder="ZIP Code" value={customerInfo.zipCode} onChange={e => setCustomerInfo({ ...customerInfo, zipCode: e.target.value })} />
+          <Input placeholder="State/County" value={customerInfo.state} onChange={e => setCustomerInfo({ ...customerInfo, state: e.target.value })} />
+          <Input placeholder="ZIP/Postal Code" value={customerInfo.zipCode} onChange={e => setCustomerInfo({ ...customerInfo, zipCode: e.target.value })} />
+          <Select value={customerInfo.country} onValueChange={value => setCustomerInfo({ ...customerInfo, country: value })}>
+            <SelectTrigger className="md:col-span-2">
+              <SelectValue placeholder="Select Country" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="UK">United Kingdom</SelectItem>
+              <SelectItem value="US">United States</SelectItem>
+              <SelectItem value="CA">Canada</SelectItem>
+              <SelectItem value="AU">Australia</SelectItem>
+              <SelectItem value="DE">Germany</SelectItem>
+              <SelectItem value="FR">France</SelectItem>
+              <SelectItem value="ES">Spain</SelectItem>
+              <SelectItem value="IT">Italy</SelectItem>
+              <SelectItem value="NL">Netherlands</SelectItem>
+              <SelectItem value="BE">Belgium</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex justify-between mt-6">
           <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
-          <Button onClick={() => setStep(2)}>Next: Review</Button>
+          <Button 
+            onClick={() => setStep(2)} 
+            disabled={!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !customerInfo.address || !customerInfo.city || !customerInfo.zipCode}
+          >
+            Next: Shipping
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Step 2: Review
+  // Step 2: Shipping
+  function renderShipping() {
+    return (
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Shipping Method</h2>
+        <ShippingOptions
+          customerInfo={customerInfo}
+          cartTotal={cart.subtotal}
+          cartItems={cart.items}
+          selectedShipping={selectedShipping?.optionId || null}
+          onShippingSelect={(optionId, cost, details) => {
+            setSelectedShipping({ optionId, cost, details });
+          }}
+        />
+        <div className="flex justify-between mt-6">
+          <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+          <Button 
+            onClick={() => setStep(3)} 
+            disabled={!selectedShipping}
+          >
+            Next: Review
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 3: Review
   function renderReview() {
     // Validate cart is not empty
     if (cart.items.length === 0) {
@@ -319,8 +380,15 @@ export default function ModernCartPage() {
           <div><b>Name:</b> {customerInfo.firstName} {customerInfo.lastName}</div>
           <div><b>Email:</b> {customerInfo.email}</div>
           <div><b>Phone:</b> {customerInfo.phone}</div>
-          <div><b>Address:</b> {customerInfo.address}, {customerInfo.city}, {customerInfo.state} {customerInfo.zipCode}</div>
+          <div><b>Address:</b> {customerInfo.address}, {customerInfo.city}, {customerInfo.state} {customerInfo.zipCode}, {customerInfo.country}</div>
         </div>
+        {selectedShipping && (
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <div><b>Shipping Method:</b> {selectedShipping.details.optionName}</div>
+            <div><b>Estimated Delivery:</b> {selectedShipping.details.estimatedDelivery}</div>
+            <div><b>Shipping Cost:</b> {selectedShipping.cost === 0 ? 'FREE' : `£${selectedShipping.cost.toFixed(2)}`}</div>
+          </div>
+        )}
         <div className="mb-4">
           <b>Items:</b>
           <ul className="list-disc ml-6">
@@ -331,19 +399,28 @@ export default function ModernCartPage() {
         </div>
         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
           <div className="flex justify-between">
-            <span><b>Subtotal:</b></span>
-            <span><b>£{cart.subtotal.toFixed(2)}</b></span>
+            <span>Subtotal:</span>
+            <span>£{cart.subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Shipping:</span>
+            <span>{selectedShipping?.cost === 0 ? 'FREE' : `£${(selectedShipping?.cost || 0).toFixed(2)}`}</span>
+          </div>
+          <hr className="my-2" />
+          <div className="flex justify-between font-bold">
+            <span>Total:</span>
+            <span>£{(cart.subtotal + (selectedShipping?.cost || 0)).toFixed(2)}</span>
           </div>
         </div>
         <div className="flex justify-between mt-6">
-          <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-          <Button onClick={() => setStep(3)} disabled={isProcessing}>Next: Payment</Button>
+          <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+          <Button onClick={() => setStep(4)} disabled={isProcessing}>Next: Payment</Button>
         </div>
       </div>
     );
   }
 
-  // Step 3: Payment
+  // Step 4: Payment
   function renderPayment() {
     // Validate cart is not empty
     if (cart.items.length === 0) {
@@ -365,7 +442,7 @@ export default function ModernCartPage() {
           <h2 className="text-2xl font-bold mb-4">Payment</h2>
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">Please complete your customer information before proceeding to payment.</p>
-            <Button onClick={() => setStep(1)}>Back to Info</Button>
+            <Button onClick={() => setStep(2)}>Back to Shipping</Button>
           </div>
         </div>
       );
@@ -381,7 +458,7 @@ export default function ModernCartPage() {
         {selectedPayment === 'stripe' && (
           stripeConfigured ? (
             <StripeCheckout 
-              amount={cart.subtotal} 
+              amount={cart.subtotal + (selectedShipping?.cost || 0)} 
               onSuccess={handleOrderPlacement}
               onError={msg => toast({ title: 'Stripe Error', description: msg, variant: 'destructive' })}
               customerEmail={customerInfo.email}
@@ -392,7 +469,7 @@ export default function ModernCartPage() {
           )
         )}
         <div className="flex justify-between mt-6">
-          <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+          <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
         </div>
       </div>
     );
@@ -418,14 +495,16 @@ export default function ModernCartPage() {
       <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-8 animate-in fade-in slide-in-from-bottom-10 duration-700 ease-out">
         {step === 0 && renderCart()}
         {step === 1 && renderInfo()}
-        {step === 2 && renderReview()}
-        {step === 3 && renderPayment()}
+        {step === 2 && renderShipping()}
+        {step === 3 && renderReview()}
+        {step === 4 && renderPayment()}
       </div>
       <aside className="sticky bottom-0 bg-gradient-to-r from-pink-100 to-pink-50 p-4 rounded-t-2xl shadow-inner flex flex-col sm:flex-row justify-between items-center gap-4 z-20 border-t border-pink-200 animate-in fade-in slide-in-from-bottom-8 duration-500">
         <div className="w-full sm:w-auto text-center">
           <div className="font-bold text-lg text-primary">Order Summary</div>
-          <div className="text-md">Subtotal: <span className="font-semibold text-accent">£{cart.subtotal.toFixed(2)}</span></div>
-          {/* Add shipping, discounts, etc. here */}
+          <div className="text-sm">Subtotal: £{cart.subtotal.toFixed(2)}</div>
+          <div className="text-sm">Shipping: {selectedShipping?.cost === 0 ? 'FREE' : `£${(selectedShipping?.cost || 0).toFixed(2)}`}</div>
+          <div className="text-lg font-bold">Total: <span className="text-accent">£{(cart.subtotal + (selectedShipping?.cost || 0)).toFixed(2)}</span></div>
         </div>
       </aside>
     </div>

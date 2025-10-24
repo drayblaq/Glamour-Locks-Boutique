@@ -5,9 +5,11 @@ import { useCart } from '@/app/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import StripeCheckout from '@/components/StripeCheckout';
+import ShippingOptions from '@/components/checkout/ShippingOptions';
 import { useToast } from '@/hooks/use-toast';
+import { CustomerShippingSelection } from '@/lib/types/shipping';
 
-const steps = ['Cart', 'Info', 'Review', 'Payment'];
+const steps = ['Cart', 'Info', 'Shipping', 'Review', 'Payment'];
 
 function ProgressBar({ step }: { step: number }) {
   return (
@@ -36,6 +38,7 @@ export default function ModernCartPage() {
   });
   const [coupon, setCoupon] = useState('');
   const [selectedPayment, setSelectedPayment] = useState('stripe');
+  const [selectedShipping, setSelectedShipping] = useState<CustomerShippingSelection | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderInProgress, setOrderInProgress] = useState(false);
@@ -138,6 +141,7 @@ export default function ModernCartPage() {
     // Capture cart items before any potential clearing
     const orderItems = [...cart.items];
     const orderSubtotal = cart.subtotal;
+    const shippingCost = selectedShipping?.price || 0;
     
     // Validate that we have items to order
     if (orderItems.length === 0) {
@@ -180,8 +184,9 @@ export default function ModernCartPage() {
       },
       items: validItems, // Use validated items instead of orderItems
       subtotal: orderSubtotal,
-      shipping: 0,
-      total: orderSubtotal,
+      shipping: shippingCost,
+      shippingOption: selectedShipping,
+      total: orderSubtotal + shippingCost,
       emailSent: false,
       status: 'pending',
       paymentId: paymentId || '',
@@ -254,7 +259,9 @@ export default function ModernCartPage() {
             {cart.items.map(item => (
               <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm sm:text-base truncate">{item.name}</div>
+                  <div className="font-semibold text-sm sm:text-base truncate">
+                    {item.name}
+                  </div>
                   <div className="text-xs sm:text-sm text-gray-500">£{item.price.toFixed(2)} x {item.quantity}</div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -376,6 +383,36 @@ export default function ModernCartPage() {
             onClick={() => setStep(2)}
             className="min-h-[44px] w-full sm:w-auto"
           >
+            Next: Shipping
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 2: Shipping
+  function renderShipping() {
+    return (
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold mb-4">Shipping Options</h2>
+        <ShippingOptions
+          onShippingSelect={setSelectedShipping}
+          selectedShipping={selectedShipping || undefined}
+          subtotal={cart.subtotal}
+        />
+        <div className="flex flex-col sm:flex-row justify-between mt-6 gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => setStep(1)}
+            className="min-h-[44px] w-full sm:w-auto"
+          >
+            Back
+          </Button>
+          <Button 
+            onClick={() => setStep(3)}
+            disabled={!selectedShipping}
+            className="min-h-[44px] w-full sm:w-auto"
+          >
             Next: Review
           </Button>
         </div>
@@ -383,7 +420,7 @@ export default function ModernCartPage() {
     );
   }
 
-  // Step 2: Review
+  // Step 3: Review
   function renderReview() {
     // Validate cart is not empty
     if (cart.items.length === 0) {
@@ -411,25 +448,46 @@ export default function ModernCartPage() {
           <b>Items:</b>
           <ul className="list-disc ml-6">
             {cart.items.map(item => (
-              <li key={item.id}>{item.name} x {item.quantity} (£{item.price.toFixed(2)} each)</li>
+              <li key={item.id}>
+                {item.name} x {item.quantity} (£{item.price.toFixed(2)} each)
+              </li>
             ))}
           </ul>
         </div>
+        {selectedShipping && (
+          <div className="mb-4">
+            <b>Shipping:</b> {selectedShipping.name} - £{selectedShipping.price.toFixed(2)}
+            <div className="text-sm text-gray-500">
+              Estimated delivery: {selectedShipping.estimatedDays.min === selectedShipping.estimatedDays.max 
+                ? `${selectedShipping.estimatedDays.min} ${selectedShipping.estimatedDays.min === 1 ? 'day' : 'days'}`
+                : `${selectedShipping.estimatedDays.min}-${selectedShipping.estimatedDays.max} days`
+              }
+            </div>
+          </div>
+        )}
         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <div className="flex justify-between">
-            <span><b>Subtotal:</b></span>
-            <span><b>£{cart.subtotal.toFixed(2)}</b></span>
+          <div className="flex justify-between mb-2">
+            <span>Subtotal:</span>
+            <span>£{cart.subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between mb-2">
+            <span>Shipping:</span>
+            <span>£{(selectedShipping?.price || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between border-t pt-2">
+            <span><b>Total:</b></span>
+            <span><b>£{(cart.subtotal + (selectedShipping?.price || 0)).toFixed(2)}</b></span>
           </div>
         </div>
         <div className="flex justify-between mt-6">
-          <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-          <Button onClick={() => setStep(3)} disabled={isProcessing}>Next: Payment</Button>
+          <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+          <Button onClick={() => setStep(4)} disabled={isProcessing}>Next: Payment</Button>
         </div>
       </div>
     );
   }
 
-  // Step 3: Payment
+  // Step 4: Payment
   function renderPayment() {
     // Validate cart is not empty
     if (cart.items.length === 0) {
@@ -467,7 +525,7 @@ export default function ModernCartPage() {
         {selectedPayment === 'stripe' && (
           stripeConfigured ? (
             <StripeCheckout 
-              amount={cart.subtotal} 
+              amount={cart.subtotal + (selectedShipping?.price || 0)} 
               onSuccess={handleOrderPlacement}
               onError={msg => toast({ title: 'Stripe Error', description: msg, variant: 'destructive' })}
               customerEmail={customerInfo.email}
@@ -478,7 +536,7 @@ export default function ModernCartPage() {
           )
         )}
         <div className="flex justify-between mt-6">
-          <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+          <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
         </div>
       </div>
     );
@@ -504,14 +562,18 @@ export default function ModernCartPage() {
       <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-8 animate-in fade-in slide-in-from-bottom-10 duration-700 ease-out">
         {step === 0 && renderCart()}
         {step === 1 && renderInfo()}
-        {step === 2 && renderReview()}
-        {step === 3 && renderPayment()}
+        {step === 2 && renderShipping()}
+        {step === 3 && renderReview()}
+        {step === 4 && renderPayment()}
       </div>
       <aside className="sticky bottom-0 bg-gradient-to-r from-pink-100 to-pink-50 p-4 rounded-t-2xl shadow-inner flex flex-col sm:flex-row justify-between items-center gap-4 z-20 border-t border-pink-200 animate-in fade-in slide-in-from-bottom-8 duration-500">
         <div className="w-full sm:w-auto text-center">
           <div className="font-bold text-base sm:text-lg text-primary">Order Summary</div>
           <div className="text-sm sm:text-base">Subtotal: <span className="font-semibold text-accent">£{cart.subtotal.toFixed(2)}</span></div>
-          {/* Add shipping, discounts, etc. here */}
+          {selectedShipping && (
+            <div className="text-sm sm:text-base">Shipping: <span className="font-semibold text-accent">£{selectedShipping.price.toFixed(2)}</span></div>
+          )}
+          <div className="text-sm sm:text-base border-t pt-1 mt-1">Total: <span className="font-bold text-primary">£{(cart.subtotal + (selectedShipping?.price || 0)).toFixed(2)}</span></div>
         </div>
       </aside>
     </div>

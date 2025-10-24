@@ -3,7 +3,6 @@ import { CustomerAuthService } from '@/lib/customer-auth';
 import { ServerTempAuthService } from '@/lib/server-temp-auth';
 import { rateLimit, validateEmail, getSecurityHeaders } from '@/lib/security';
 import { logger } from '@/lib/monitoring';
-import jwt from 'jsonwebtoken';
 
 const loginRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -62,15 +61,10 @@ export async function POST(request: NextRequest) {
     );
 
     if (result.success && result.customer) {
-      // Create JWT token
-      const token = jwt.sign(
-        { 
-          customerId: result.customer.id,
-          email: result.customer.email,
-          type: 'customer'
-        },
-        process.env.NEXTAUTH_SECRET!,
-        { expiresIn: '7d' }
+      // Create JWT token using the ServerTempAuthService
+      const token = ServerTempAuthService.createCustomerToken(
+        result.customer.id,
+        result.customer.email
       );
 
       logger.info('Customer login successful', { 

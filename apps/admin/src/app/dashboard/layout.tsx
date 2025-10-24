@@ -15,7 +15,8 @@ import {
   Home,
   Mail,
   Menu,
-  X
+  X,
+  Truck
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Products', href: '/dashboard/products', icon: ShoppingBag },
   { name: 'Orders', href: '/dashboard/orders', icon: Package },
+  { name: 'Shipping', href: '/dashboard/shipping', icon: Truck },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 

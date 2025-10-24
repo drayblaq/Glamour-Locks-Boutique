@@ -25,6 +25,8 @@ const Header = () => {
   const { user } = useUser();
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'A') {
         router.push('/admin/login');

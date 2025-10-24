@@ -2,9 +2,14 @@
 
 import Link from 'next/link';
 import { Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = useState(2024);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
   
   return (
     <footer className="bg-secondary border-t mt-16">

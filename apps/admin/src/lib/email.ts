@@ -14,7 +14,7 @@ export interface EmailResult {
   error?: string;
 }
 
-class EmailService {
+export class EmailService {
   private transporter: nodemailer.Transporter | null = null;
 
   constructor() {

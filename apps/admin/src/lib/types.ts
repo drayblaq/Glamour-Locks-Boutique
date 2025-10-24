@@ -5,6 +5,11 @@ export interface Product {
   price: number
   images: string[]
   stock: number
+  variants?: Array<{
+    color: string;
+    quantity: number;
+    images: string[];
+  }>;
   createdAt: Date
   updatedAt: Date
 }

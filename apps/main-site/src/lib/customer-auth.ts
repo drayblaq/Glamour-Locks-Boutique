@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/firebase';
-import { collection, doc, getDoc, setDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import crypto from 'crypto';
 
 export interface Customer {
   id: string;
@@ -25,8 +26,10 @@ export interface CustomerAuth {
   email: string;
   passwordHash: string;
   customerId: string;
-  createdAt: Date;
-  lastLogin?: Date;
+  createdAt: Date | Timestamp;
+  lastLogin?: Date | Timestamp;
+  resetToken?: string | null;
+  resetTokenExpiry?: Date | Timestamp | null;
 }
 
 export class CustomerAuthService {
@@ -58,7 +61,7 @@ export class CustomerAuthService {
         email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
-        phone: data.phone,
+        ...(data.phone && { phone: data.phone }), // Only include phone if it's not undefined
         createdAt: new Date(),
         updatedAt: new Date(),
         isActive: true
@@ -140,6 +143,11 @@ export class CustomerAuthService {
   // Get customer by ID
   static async getCustomerById(customerId: string): Promise<Customer | null> {
     try {
+      if (!customerId || typeof customerId !== 'string') {
+        console.error('Invalid customerId provided:', customerId);
+        return null;
+      }
+
       const customerRef = doc(db, this.CUSTOMERS_COLLECTION, customerId);
       const customerSnap = await getDoc(customerRef);
       
@@ -198,6 +206,11 @@ export class CustomerAuthService {
   // Get customer orders
   static async getCustomerOrders(customerId: string): Promise<any[]> {
     try {
+      if (!customerId || typeof customerId !== 'string') {
+        console.error('Invalid customerId provided for orders:', customerId);
+        return [];
+      }
+
       const q = query(
         collection(db, 'orders'),
         where('customerId', '==', customerId)
@@ -239,6 +252,85 @@ export class CustomerAuthService {
       await setDoc(authRef, { lastLogin: new Date() }, { merge: true });
     } catch (error) {
       console.error('Update last login error:', error);
+    }
+  }
+
+  // Send password reset email
+  static async sendPasswordResetEmail(email: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      const auth = await this.getAuthByEmail(email);
+      if (!auth) {
+        // Don't reveal if email exists for security
+        return { success: true };
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Update auth record with reset token
+      const authRef = doc(db, this.AUTH_COLLECTION, auth.id);
+      await setDoc(authRef, {
+        resetToken,
+        resetTokenExpiry
+      }, { merge: true });
+
+      // TODO: Send email with reset link
+      // For now, just log the token (in production, send via email service)
+      console.log(`Password reset token for ${email}: ${resetToken}`);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Send password reset email error:', error);
+      return { success: false, error: 'Failed to send reset email' };
+    }
+  }
+
+  // Reset password using token
+  static async resetPassword(token: string, newPassword: string): Promise<{
+    success: boolean;
+    email?: string;
+    error?: string;
+  }> {
+    try {
+      // Find auth record by reset token
+      const q = query(
+        collection(db, this.AUTH_COLLECTION),
+        where('resetToken', '==', token)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        return { success: false, error: 'Invalid or expired reset token' };
+      }
+
+      const authDoc = querySnapshot.docs[0];
+      const auth = authDoc.data() as CustomerAuth;
+
+      // Check if token is expired
+      if (!auth.resetTokenExpiry || new Date() > (auth.resetTokenExpiry instanceof Timestamp ? auth.resetTokenExpiry.toDate() : new Date(auth.resetTokenExpiry))) {
+        return { success: false, error: 'Reset token has expired' };
+      }
+
+      // Hash new password
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+
+      // Update password and clear reset token
+      const authRef = doc(db, this.AUTH_COLLECTION, authDoc.id);
+      await setDoc(authRef, {
+        passwordHash,
+        resetToken: null,
+        resetTokenExpiry: null,
+        lastLogin: new Date()
+      }, { merge: true });
+
+      return { success: true, email: auth.email };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return { success: false, error: 'Failed to reset password' };
     }
   }
 }

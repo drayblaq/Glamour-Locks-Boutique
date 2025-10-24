@@ -3,12 +3,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface CartItem {
-  id: string;
-  name: string;
+  id: string; // For variants: productId-colorName, for regular products: productId
+  name: string; // For variants: "Product Name - Color", for regular products: "Product Name"
   price: number;
   quantity: number;
   image?: string;
   description?: string;
+  variant?: {
+    color: string;
+    variantId: string; // Same as id for variants
+  };
 }
 
 interface CartContextType {
@@ -57,6 +61,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (newItem: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
     setItems(currentItems => {
+      // Use the item's ID directly (which now includes variant info for variants)
       const existingItemIndex = currentItems.findIndex(item => item.id === newItem.id);
       
       if (existingItemIndex >= 0) {

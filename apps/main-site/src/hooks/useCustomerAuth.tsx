@@ -102,6 +102,16 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (response.ok && result.success) {
+        // Auto-login after successful registration
+        if (result.token && result.customer) {
+          setToken(result.token);
+          setCustomer(result.customer);
+          
+          // Store in localStorage
+          localStorage.setItem('customerToken', result.token);
+          localStorage.setItem('customer', JSON.stringify(result.customer));
+        }
+        
         return { success: true };
       } else {
         return { success: false, error: result.error || 'Registration failed' };

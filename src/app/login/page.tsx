@@ -26,7 +26,22 @@ export default function CustomerLoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.replace('/');
     } catch (err: any) {
-      setError(err.message || 'Login failed.');
+      console.error('Login error:', err);
+      
+      // Provide user-friendly error messages instead of raw Firebase errors
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+        setError('Incorrect email or password. Please try again.');
+      } else if (err.code === 'auth/user-not-found') {
+        setError('No account found with this email address. Please check your email or create a new account.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many failed login attempts. Please try again later.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('Login failed. Please try again or contact support if the problem persists.');
+      }
     } finally {
       setLoading(false);
     }

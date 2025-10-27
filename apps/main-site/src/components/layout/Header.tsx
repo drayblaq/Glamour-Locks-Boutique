@@ -57,8 +57,8 @@ const Header = () => {
         <nav className="hidden lg:flex items-center justify-center flex-1 mx-2 sm:mx-8">
           <div className="flex items-center space-x-4 sm:space-x-8">
             {navigationLinks.map((link) => {
-              const isActive = pathname === link.href || 
-                             (link.href !== "/" && pathname.startsWith(link.href));
+              const isActive = pathname === link.href ||
+                (link.href !== "/" && pathname.startsWith(link.href));
 
               return (
                 <Link
@@ -66,8 +66,8 @@ const Header = () => {
                   href={link.href}
                   className={cn(
                     "text-lg font-bold px-6 py-3 rounded-full transition-all duration-300 ease-in-out relative group",
-                    isActive 
-                      ? "text-white bg-white/20 shadow-lg backdrop-blur-sm" 
+                    isActive
+                      ? "text-white bg-white/20 shadow-lg backdrop-blur-sm"
                       : "text-white hover:text-gray-200 hover:bg-white/15 hover:shadow-lg hover:backdrop-blur-sm",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-pink-500"
                   )}
@@ -87,11 +87,11 @@ const Header = () => {
         <div className="flex items-center ml-auto">
           <div className="flex items-center gap-4 sm:gap-6 bg-white/20 rounded-full px-1 sm:px-2 py-1 shadow-md backdrop-blur-md border border-white/30">
             {/* Shopping Cart */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-9 w-9 sm:h-10 sm:w-10 rounded-full hover:bg-white/30 transition-all duration-200 border-none"
-              asChild 
+              asChild
               aria-label="Shopping Cart"
             >
               <Link href="/cart" className="flex items-center justify-center w-full h-full">
@@ -126,13 +126,13 @@ const Header = () => {
                 </Button>
               </>
             ) : (
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 className="bg-white/20 hover:bg-white/30 text-white border border-white/30"
                 onClick={() => router.push('/account')}
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                Mon Compte
+                My account
               </Button>
             )}
           </div>

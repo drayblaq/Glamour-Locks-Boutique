@@ -38,7 +38,12 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
           setCustomer(JSON.parse(storedCustomer));
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        // Log errors but avoid exposing sensitive details in production
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error initializing auth:', error);
+        } else {
+          console.error('Auth initialization failed');
+        }
         // Clear invalid data
         localStorage.removeItem('customerToken');
         localStorage.removeItem('customer');
@@ -78,7 +83,12 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error || 'Login failed' };
       }
     } catch (error) {
-      console.error('Login error:', error);
+      // Log errors but avoid exposing sensitive details in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Login error:', error);
+      } else {
+        console.error('Login failed');
+      }
       return { success: false, error: 'Network error. Please try again.' };
     }
   };
@@ -117,7 +127,12 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: result.error || 'Registration failed' };
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      // Log errors but avoid exposing sensitive details in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Registration error:', error);
+      } else {
+        console.error('Registration failed');
+      }
       return { success: false, error: 'Network error. Please try again.' };
     }
   };

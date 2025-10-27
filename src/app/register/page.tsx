@@ -26,7 +26,20 @@ export default function RegisterPage() {
       await createUserWithEmailAndPassword(auth, email, password);
       router.replace('/');
     } catch (err: any) {
-      setError(err.message || 'Registration failed.');
+      console.error('Registration error:', err);
+      
+      // Provide user-friendly error messages instead of raw Firebase errors
+      if (err.code === 'auth/email-already-in-use') {
+        setError('This email is already registered. Please try logging in instead.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password is too weak. Please choose a stronger password.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('Registration failed. Please try again or contact support if the problem persists.');
+      }
     } finally {
       setLoading(false);
     }

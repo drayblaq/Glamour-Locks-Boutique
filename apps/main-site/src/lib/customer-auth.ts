@@ -83,7 +83,12 @@ export class CustomerAuthService {
 
       return { success: true, customer };
     } catch (error: any) {
-      console.error('Customer registration error:', error);
+      // Log errors but avoid exposing sensitive Firebase details in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Customer registration error:', error);
+      } else {
+        console.error('Registration failed');
+      }
       
       // Provide more specific error messages
       if (error.code === 'permission-denied') {
@@ -125,7 +130,12 @@ export class CustomerAuthService {
 
       return { success: true, customer };
     } catch (error: any) {
-      console.error('Customer authentication error:', error);
+      // Log errors but avoid exposing sensitive Firebase details in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Customer authentication error:', error);
+      } else {
+        console.error('Authentication failed');
+      }
       
       // Provide more specific error messages
       if (error.code === 'permission-denied') {

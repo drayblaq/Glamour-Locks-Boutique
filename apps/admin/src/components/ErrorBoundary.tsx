@@ -25,7 +25,13 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log errors but avoid exposing sensitive Firebase details in production
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
+    } else {
+      // In production, log a generic error message
+      console.error('Application error occurred:', error.name);
+    }
   }
 
   resetError = () => {

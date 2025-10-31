@@ -3,14 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Logo from '@/components/layout/Logo';
 import MobileNav from '@/components/layout/MobileNav';
 import { useCart } from '@/app/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -23,6 +22,11 @@ const Header = () => {
   const { data: session } = useSession();
   const router = useRouter();
   const { customer, isAuthenticated } = useCustomerAuth();
+  const { totalItems } = useCart();
+  
+  const [prevTotalItems, setPrevTotalItems] = useState(totalItems);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showPulse, setShowPulse] = useState(false);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -34,6 +38,23 @@ const Header = () => {
     return () => window.removeEventListener('keydown', handler);
   }, [router]);
 
+  // Animation effect when cart items change
+  useEffect(() => {
+    if (totalItems > prevTotalItems) {
+      setIsAnimating(true);
+      setShowPulse(true);
+      
+      // Reset animation after duration
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+        setShowPulse(false);
+      }, 600);
+      
+      return () => clearTimeout(timer);
+    }
+    setPrevTotalItems(totalItems);
+  }, [totalItems, prevTotalItems]);
+
   const navigationLinks = [
     { href: '/', label: 'Home' },
     { href: '/products', label: 'Shop' },
@@ -42,8 +63,6 @@ const Header = () => {
     { href: '/cart', label: 'Cart' },
 
   ];
-
-  const { totalItems } = useCart();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-pink-400 via-pink-500 to-pink-600 shadow-xl border-b-4 border-pink-300/30">
@@ -84,29 +103,59 @@ const Header = () => {
         </nav>
 
         {/* Icons - Right */}
-        <div className="flex items-center ml-auto">
-          <div className="flex items-center gap-4 sm:gap-6 bg-white/20 rounded-full px-1 sm:px-2 py-1 shadow-md backdrop-blur-md border border-white/30">
-            {/* Shopping Cart */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 sm:h-10 sm:w-10 rounded-full hover:bg-white/30 transition-all duration-200 border-none"
-              asChild
+        <div className="flex items-center ml-auto gap-2 sm:gap-3">
+          {/* Shopping Cart - Standalone */}
+          <div className="relative">
+            <Link 
+              href="/cart" 
+              className={cn(
+                "p-2 hover:scale-110 transition-all duration-200 cursor-pointer block",
+                isAnimating && "animate-bounce"
+              )}
               aria-label="Shopping Cart"
             >
-              <Link href="/cart" className="flex items-center justify-center w-full h-full">
-                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center border-2 border-white">
-                    {totalItems}
+              <ShoppingCart className={cn(
+                "w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg transition-all duration-300",
+                showPulse && "animate-pulse"
+              )} />
+              
+              {/* Pulse ring animation */}
+              {showPulse && (
+                <div className="absolute inset-0 rounded-full border-2 border-white animate-ping opacity-75"></div>
+              )}
+            </Link>
+            
+            {totalItems > 0 && (
+              <span className={cn(
+                "absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center border-2 border-white font-bold shadow-lg transition-all duration-300",
+                isAnimating && "animate-bounce scale-125",
+                "transform-gpu" // Hardware acceleration
+              )}>
+                <span className={cn(
+                  "transition-all duration-200",
+                  isAnimating && "animate-pulse"
+                )}>
+                  {totalItems}
+                </span>
+              </span>
+            )}
+            
+            {/* Drop-in animation for new items */}
+            {isAnimating && (
+              <div className="absolute -top-3 -right-3 pointer-events-none">
+                <div className="relative">
+                  <span className="inline-block text-green-400 font-bold text-sm drop-shadow-lg animate-bounce">
+                    +{totalItems - prevTotalItems}
                   </span>
-                )}
-              </Link>
-            </Button>
-            {/* Only show the menu icon (MobileNav) on mobile */}
-            <div className="flex lg:hidden">
-              <MobileNav />
-            </div>
+                  <div className="absolute inset-0 bg-green-400 rounded-full opacity-20 animate-ping"></div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Mobile Menu - Standalone (only on mobile) */}
+          <div className="flex lg:hidden">
+            <MobileNav />
           </div>
           {/* Auth Buttons - Desktop only */}
           <div className="hidden lg:flex items-center gap-2 ml-4">

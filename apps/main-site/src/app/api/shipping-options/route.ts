@@ -6,7 +6,7 @@ let shippingOptions = [
     id: 'standard',
     name: 'Standard Shipping',
     description: '3-5 working days',
-    price: 4.99,
+    price: 2.49,
     estimatedDays: '3-5',
     isActive: true,
     sortOrder: 1
@@ -24,7 +24,7 @@ let shippingOptions = [
     id: 'next-day',
     name: 'Next Day Delivery',
     description: 'Next working day',
-    price: 15.99,
+    price: 7.55,
     estimatedDays: '1',
     isActive: true,
     sortOrder: 3

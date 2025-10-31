@@ -65,7 +65,14 @@ export function ProductCard({ product, viewMode = "grid", isLoading }: ProductCa
   const handleAddToCart = async () => {
     setIsAddingToCart(true);
     try {
-      addItem(product);
+      // Add main product (no variant) with explicit ID
+      addItem({
+        id: product.id, // Main product uses base ID
+        name: product.name,
+        price: product.discountPrice || product.price,
+        image: product.images[0] || "/placeholder-product.jpg",
+        description: product.description
+      });
       toast({
         title: "Added to Cart",
         description: `${product.name} has been added to your cart.`,

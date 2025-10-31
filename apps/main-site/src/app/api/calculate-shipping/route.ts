@@ -39,9 +39,9 @@ const locationMultipliers = {
 
 // Base shipping rates
 const baseShippingRates = {
-  'standard': 4.99,
+  'standard': 2.49,
   'express': 9.99,
-  'next-day': 15.99
+  'next-day': 7.55
 };
 
 function calculateLocationMultiplier(address: ShippingCalculationRequest['address']): number {
@@ -70,12 +70,12 @@ function calculateWeightSurcharge(items: ShippingCalculationRequest['items']): n
 
 function applyFreeShippingThreshold(cartTotal: number, shippingCost: number): number {
   // Free standard shipping over £50
-  if (cartTotal >= 50 && shippingCost <= 4.99) {
+  if (cartTotal >= 50 && shippingCost <= 2.49) {
     return 0;
   }
   
   // 50% discount on express shipping over £75
-  if (cartTotal >= 75 && shippingCost > 4.99 && shippingCost <= 9.99) {
+  if (cartTotal >= 75 && shippingCost > 2.49 && shippingCost <= 9.99) {
     return shippingCost * 0.5;
   }
   

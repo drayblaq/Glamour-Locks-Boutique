@@ -15,7 +15,7 @@ const defaultShippingOptions = [
   {
     name: 'Standard Shipping',
     description: 'Regular delivery service with tracking',
-    price: 4.99,
+    price: 2.49,
     estimatedDays: { min: 3, max: 5 },
     isActive: true,
   },
@@ -29,7 +29,7 @@ const defaultShippingOptions = [
   {
     name: 'Next Day Delivery',
     description: 'Get your order tomorrow (order before 2 PM)',
-    price: 14.99,
+    price: 7.55,
     estimatedDays: { min: 1, max: 1 },
     isActive: true,
   },

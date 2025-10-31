@@ -79,8 +79,11 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
     const productName = selectedVariant ? `${product.name} (${selectedVariant})` : product.name;
     const productImage = selectedVariantData?.images?.[0] || product.images[0];
     
+    // Create unique ID for variants vs main product
+    const itemId = selectedVariant ? `${product.id}-variant-${selectedVariant}` : product.id;
+    
     addItem({
-      id: product.id,
+      id: itemId,
       name: productName,
       price: product.price,
       image: productImage,
@@ -134,16 +137,23 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 overflow-x-hidden">
-      {/* Back Button */}
-      <div className="mb-6">
+      {/* Back Button and Breadcrumb */}
+      <div className="mb-6 space-y-2">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+          <span>/</span>
+          <Link href="/products" className="hover:text-primary transition-colors">Products</Link>
+          <span>/</span>
+          <span className="text-foreground">{product.name}</span>
+        </div>
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => router.back()}
+          onClick={() => router.push('/products')}
           className="flex items-center gap-2 hover:bg-primary/10"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Back to Products
         </Button>
       </div>
       <div className="grid md:grid-cols-2 gap-8 md:gap-12">
@@ -195,9 +205,24 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
           {product.variants && product.variants.length > 0 && (
             <div className="space-y-3">
               <div>
-                <h3 className="text-lg font-semibold text-primary mb-2">
-                  Available Colors {selectedVariant && `(${selectedVariant})`}
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-primary">
+                    Available Colors {selectedVariant && `(${selectedVariant})`}
+                  </h3>
+                  {selectedVariant && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedVariant(null);
+                        setSelectedImage(product.images[0] || null);
+                      }}
+                      className="text-muted-foreground hover:text-primary"
+                    >
+                      View Main Product
+                    </Button>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {product.variants.map((variant) => (
                     <Button
@@ -245,6 +270,23 @@ export default function ProductDetailPage({ }: ProductDetailPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Continue Shopping Section */}
+      <div className="mt-12 pt-8 border-t border-border">
+        <div className="text-center space-y-4">
+          <h3 className="text-xl font-semibold text-primary">Looking for more products?</h3>
+          <p className="text-muted-foreground">Discover our full collection of premium hair care products</p>
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={() => router.push('/products')}
+            className="px-8 py-3"
+          >
+            Continue Shopping
+          </Button>
+        </div>
+      </div>
+
       {/* Sticky Add to Cart for mobile */}
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 border-t border-pink-200 shadow-lg p-4 flex md:hidden gap-3 animate-in fade-in slide-in-from-bottom-8 duration-500" style={{backdropFilter:'blur(8px)'}}>
         <Button 

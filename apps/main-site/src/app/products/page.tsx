@@ -186,9 +186,6 @@ export default function ProductsPage() {
                 {searchTerm && (
               <Badge variant="outline" className="flex items-center gap-1">Search: "{searchTerm}" <X className="w-3 h-3 cursor-pointer" onClick={() => setSearchTerm("")} /></Badge>
                 )}
-                {(priceRange[0] !== minProductPrice || priceRange[1] !== maxProductPrice) && (
-              <Badge variant="outline" className="flex items-center gap-1">Price: £{priceRange[0]}-£{priceRange[1]} <X className="w-3 h-3 cursor-pointer" onClick={() => setPriceRange([minProductPrice, maxProductPrice])} /></Badge>
-                )}
                 {minRating > 0 && (
               <Badge variant="outline" className="flex items-center gap-1">Min Rating: {minRating} <X className="w-3 h-3 cursor-pointer" onClick={() => setMinRating(0)} /></Badge>
                 )}

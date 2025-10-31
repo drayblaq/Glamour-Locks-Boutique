@@ -21,24 +21,26 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError('');
     setMessage('');
+    
     try {
-      await sendPasswordResetEmail(auth, email);
-      setMessage('Password reset email sent! Check your inbox.');
+      const response = await fetch('/api/auth/customer/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setMessage('Password reset email sent! Check your inbox and follow the instructions.');
+      } else {
+        setError(data.error || 'Failed to send reset email. Please try again.');
+      }
     } catch (err: any) {
       console.error('Password reset error:', err);
-      
-      // Provide user-friendly error messages instead of raw Firebase errors
-      if (err.code === 'auth/user-not-found') {
-        setError('No account found with this email address. Please check your email or create a new account.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Please enter a valid email address.');
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many reset attempts. Please try again later.');
-      } else if (err.code === 'auth/network-request-failed') {
-        setError('Network error. Please check your connection and try again.');
-      } else {
-        setError('Unable to send reset email. Please try again or contact support if the problem persists.');
-      }
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

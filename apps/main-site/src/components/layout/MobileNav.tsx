@@ -29,7 +29,7 @@ const MobileNav = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="lg:hidden h-12 w-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 hover:scale-110 transition-all duration-300 border border-white/20" 
+          className="lg:hidden h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 shadow-md backdrop-blur-md" 
           aria-label="Open navigation menu"
         >
           <Menu className="h-6 w-6 text-white" />
@@ -38,7 +38,7 @@ const MobileNav = () => {
       
       <SheetContent 
         side="left" 
-        className="w-56 max-w-[50vw] bg-gradient-to-b from-pink-50 to-white p-0 border-r-2 border-pink-200 h-full overflow-y-auto flex flex-col [&>button]:hidden"
+        className="w-64 max-w-[75vw] sm:max-w-[50vw] bg-gradient-to-b from-pink-50 to-white p-0 border-r-2 border-pink-200 h-full overflow-y-auto flex flex-col [&>button]:hidden"
       >
         <SheetHeader className="p-2 bg-gradient-to-r from-pink-400 to-pink-500 border-b border-pink-300">
           <div className="flex items-center justify-between">
@@ -66,13 +66,13 @@ const MobileNav = () => {
                   href={link.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "flex items-center text-xs font-medium py-2 px-2 rounded-md transition-all duration-200 gap-2 min-h-[36px] active:scale-95",
+                    "flex items-center text-sm font-medium py-3 px-3 rounded-md transition-all duration-200 gap-3 min-h-[44px] active:scale-95 touch-manipulation",
                     isActive 
                       ? "bg-pink-200 text-pink-700" 
                       : "text-gray-700 hover:bg-pink-100 hover:text-pink-600"
                   )}
                 >
-                  <span className="w-4 h-4 flex-shrink-0">{link.icon}</span>
+                  <span className="w-5 h-5 flex-shrink-0">{link.icon}</span>
                   <span className="truncate">{link.label}</span>
                 </Link>
               );
@@ -88,17 +88,33 @@ const MobileNav = () => {
                 <span className="text-pink-500 font-medium text-xs">Loading...</span>
               </div>
             ) : !isAuthenticated ? (
-                <Button asChild className="w-full justify-start text-xs font-medium py-1.5 px-2 h-auto bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-md transition-all duration-200 gap-1 min-h-[32px] active:scale-95">
+              <>
+                <Button asChild className="w-full justify-start text-sm font-medium py-2.5 px-3 h-auto bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-md transition-all duration-200 gap-2 min-h-[44px] active:scale-95 touch-manipulation">
                   <Link href="/login" onClick={() => setIsOpen(false)}>
-                    <LogIn className="w-3 h-3" />
+                    <LogIn className="w-4 h-4" />
                     Login
                   </Link>
                 </Button>
+                <Button asChild className="w-full justify-start text-sm font-medium py-2.5 px-3 h-auto bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-md transition-all duration-200 gap-2 min-h-[44px] active:scale-95 touch-manipulation">
+                  <Link href="/register" onClick={() => setIsOpen(false)}>
+                    <UserPlus className="w-4 h-4" />
+                    Create Account
+                  </Link>
+                </Button>
+              </>
             ) : (
-              <Button className="w-full justify-start text-xs font-medium py-1.5 px-2 h-auto bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black text-white rounded-md transition-all duration-200 gap-1 min-h-[32px] active:scale-95" onClick={async () => { await import('firebase/auth').then(({ signOut }) => signOut(require('@/lib/firebase').auth)); setIsOpen(false); }}>
-                <LogOut className="w-3 h-3" />
-                Logout
-              </Button>
+              <>
+                <Button asChild className="w-full justify-start text-sm font-medium py-2.5 px-3 h-auto bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white rounded-md transition-all duration-200 gap-2 min-h-[44px] active:scale-95 touch-manipulation">
+                  <Link href="/account" onClick={() => setIsOpen(false)}>
+                    <User className="w-4 h-4" />
+                    My Account
+                  </Link>
+                </Button>
+                <Button className="w-full justify-start text-sm font-medium py-2.5 px-3 h-auto bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black text-white rounded-md transition-all duration-200 gap-2 min-h-[44px] active:scale-95 touch-manipulation" onClick={async () => { await import('firebase/auth').then(({ signOut }) => signOut(require('@/lib/firebase').auth)); setIsOpen(false); }}>
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </Button>
+              </>
             )}
           </div>
         </div>

@@ -2,7 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { rateLimit, validateEmail, validateAmount, getSecurityHeaders } from '@/lib/security';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Validate Stripe secret key on initialization
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('❌ STRIPE_SECRET_KEY is not set in environment variables');
+}
+
+if (!process.env.STRIPE_SECRET_KEY?.startsWith('sk_')) {
+  console.error('❌ STRIPE_SECRET_KEY appears to be invalid (should start with sk_)');
+}
+
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 // Rate limiting for payment intent creation
 const paymentRateLimit = rateLimit({
@@ -13,6 +24,21 @@ const paymentRateLimit = rateLimit({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!stripe || !process.env.STRIPE_SECRET_KEY) {
+      console.error('❌ Stripe is not configured. STRIPE_SECRET_KEY is missing.');
+      return NextResponse.json(
+        { 
+          error: 'Payment service is not configured. Please contact support.',
+          details: 'Stripe secret key is missing'
+        },
+        { 
+          status: 500,
+          headers: getSecurityHeaders()
+        }
+      );
+    }
+    
     // Apply rate limiting
     const rateLimitResult = paymentRateLimit(request);
     if (!rateLimitResult.success) {
@@ -149,6 +175,16 @@ export async function POST(request: NextRequest) {
 // Handle GET requests for testing
 export async function GET() {
   try {
+    // Check if Stripe is configured
+    if (!stripe || !process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ 
+        message: 'Payment Intent API is not configured',
+        gbp_supported: false,
+        error: 'STRIPE_SECRET_KEY is missing',
+        supported_methods: []
+      }, { status: 500 });
+    }
+    
     // Test if we can create a simple payment intent with GBP
     const testIntent = await stripe.paymentIntents.create({
       amount: 100, // £1.00
@@ -184,6 +220,6 @@ export async function GET() {
         'link',
         'paypal'
       ]
-    });
+    }, { status: 500 });
   }
 }

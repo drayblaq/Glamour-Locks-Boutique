@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '@/app/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,15 +33,98 @@ function generateOrderNumber() {
 export default function ModernCartPage() {
   const cart = useCart();
   const { toast } = useToast();
-  const [step, setStep] = useState(0);
-  const [customerInfo, setCustomerInfo] = useState({
-    firstName: '', lastName: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', country: 'UK',
-  });
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  // Initialize step from URL or localStorage
+  const getInitialStep = () => {
+    const urlStep = searchParams.get('step');
+    if (urlStep) {
+      const stepNum = parseInt(urlStep, 10);
+      if (stepNum >= 0 && stepNum < steps.length) {
+        return stepNum;
+      }
+    }
+    
+    // Fallback to localStorage
+    if (typeof window !== 'undefined') {
+      const savedStep = localStorage.getItem('checkout-step');
+      if (savedStep) {
+        const stepNum = parseInt(savedStep, 10);
+        if (stepNum >= 0 && stepNum < steps.length) {
+          return stepNum;
+        }
+      }
+    }
+    
+    return 0;
+  };
+  
+  // Initialize customer info from localStorage
+  const getInitialCustomerInfo = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('checkout-customer-info');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error loading customer info:', e);
+        }
+      }
+    }
+    return { firstName: '', lastName: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', country: 'UK' };
+  };
+  
+  // Initialize shipping from localStorage
+  const getInitialShipping = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('checkout-shipping');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error loading shipping:', e);
+        }
+      }
+    }
+    return null;
+  };
+  
+  const [step, setStep] = useState(getInitialStep);
+  const [customerInfo, setCustomerInfo] = useState(getInitialCustomerInfo);
   const [selectedShipping, setSelectedShipping] = useState<{
     optionId: string;
     cost: number;
     details: any;
-  } | null>(null);
+  } | null>(getInitialShipping);
+  // Update URL and localStorage when step changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('checkout-step', step.toString());
+      const params = new URLSearchParams(searchParams.toString());
+      if (step > 0) {
+        params.set('step', step.toString());
+      } else {
+        params.delete('step');
+      }
+      const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [step, searchParams, router]);
+  
+  // Save customer info and shipping to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && customerInfo.firstName) {
+      localStorage.setItem('checkout-customer-info', JSON.stringify(customerInfo));
+    }
+  }, [customerInfo]);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined' && selectedShipping) {
+      localStorage.setItem('checkout-shipping', JSON.stringify(selectedShipping));
+    }
+  }, [selectedShipping]);
+  
   const [coupon, setCoupon] = useState('');
   const [selectedPayment, setSelectedPayment] = useState('stripe');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -90,6 +174,12 @@ export default function ModernCartPage() {
           if (existingOrder) {
             console.log('⚠️  Order with this paymentId already exists:', existingOrder.id);
             setOrderPlaced(true);
+            // Clear checkout data from localStorage
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('checkout-step');
+              localStorage.removeItem('checkout-customer-info');
+              localStorage.removeItem('checkout-shipping');
+            }
             toast({
               title: "Order Already Exists",
               description: "Your order has already been created successfully!",
@@ -228,6 +318,13 @@ export default function ModernCartPage() {
       
       setIsProcessing(false);
       setOrderPlaced(true);
+      
+      // Clear checkout data from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('checkout-step');
+        localStorage.removeItem('checkout-customer-info');
+        localStorage.removeItem('checkout-shipping');
+      }
       
       // Clear cart after a short delay to ensure order is fully processed
       setTimeout(() => {

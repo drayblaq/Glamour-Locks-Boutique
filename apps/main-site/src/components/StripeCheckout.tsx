@@ -16,7 +16,17 @@ import { Loader2, CreditCard, Smartphone, Wallet } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Initialize Stripe - Make sure to use your LIVE publishable key
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+
+if (!stripePublishableKey) {
+  console.error('❌ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set in environment variables');
+}
+
+if (stripePublishableKey && !stripePublishableKey.startsWith('pk_')) {
+  console.error('❌ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY appears to be invalid (should start with pk_)');
+}
+
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 interface StripeCheckoutProps {
   amount: number;
@@ -490,16 +500,39 @@ export default function StripeCheckout(props: StripeCheckoutProps) {
         });
         
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Payment intent creation failed:', errorData);
-          throw new Error(errorData.error || 'Failed to create payment intent');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Payment intent creation failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          });
+          
+          // Provide more specific error messages
+          let errorMessage = 'Failed to initialize payment';
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (response.status === 500) {
+            errorMessage = 'Payment service is not configured. Please contact support.';
+          } else if (response.status === 429) {
+            errorMessage = 'Too many requests. Please try again in a moment.';
+          }
+          
+          throw new Error(errorMessage);
         }
         
-        const { client_secret } = await response.json();
-        setClientSecret(client_secret);
+        const data = await response.json();
+        
+        if (!data.client_secret) {
+          console.error('No client_secret in response:', data);
+          throw new Error('Invalid response from payment server');
+        }
+        
+        setClientSecret(data.client_secret);
       } catch (error) {
         console.error('Error creating payment intent:', error);
-        props.onError?.(error instanceof Error ? error.message : 'Failed to initialize payment');
+        const errorMessage = error instanceof Error ? error.message : 'Failed to initialize payment';
+        props.onError?.(errorMessage);
+        setClientSecret(null);
       } finally {
         setLoading(false);
       }
@@ -519,11 +552,21 @@ export default function StripeCheckout(props: StripeCheckoutProps) {
     );
   }
 
+  if (!stripePromise) {
+    return (
+      <div className="text-red-600 text-center p-4">
+        <p className="font-semibold mb-2">Payment system is not configured</p>
+        <p className="text-sm">Please contact support.</p>
+      </div>
+    );
+  }
+
   if (!clientSecret) {
     return (
       <div className="text-red-600 text-center p-4">
         <p className="font-semibold mb-2">Failed to initialize payment</p>
         <p className="text-sm">Please refresh the page and try again.</p>
+        <p className="text-xs mt-2 text-gray-500">If the problem persists, please contact support.</p>
       </div>
     );
   }

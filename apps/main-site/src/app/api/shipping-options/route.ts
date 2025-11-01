@@ -12,22 +12,13 @@ let shippingOptions = [
     sortOrder: 1
   },
   {
-    id: 'express',
-    name: 'Express Shipping',
-    description: '1-2 working days',
-    price: 9.99,
-    estimatedDays: '1-2',
-    isActive: true,
-    sortOrder: 2
-  },
-  {
     id: 'next-day',
     name: 'Next Day Delivery',
     description: 'Next working day',
     price: 7.55,
     estimatedDays: '1',
     isActive: true,
-    sortOrder: 3
+    sortOrder: 2
   }
 ];
 

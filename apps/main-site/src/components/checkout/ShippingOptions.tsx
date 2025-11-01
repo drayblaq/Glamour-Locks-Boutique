@@ -51,8 +51,6 @@ const getShippingIcon = (optionId: string) => {
   switch (optionId) {
     case 'standard':
       return <Truck className="h-5 w-5" />;
-    case 'express':
-      return <Clock className="h-5 w-5" />;
     case 'next-day':
       return <Zap className="h-5 w-5" />;
     default:
@@ -255,27 +253,14 @@ export default function ShippingOptions({
                   {isCalculating ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : calculation ? (
-                    <div>
-                      <div className="font-semibold">
-                        {calculation.shippingCost === 0 ? 'FREE' : `£${calculation.shippingCost.toFixed(2)}`}
-                      </div>
-                      {calculation.breakdown.freeShippingApplied && (
-                        <div className="text-xs text-green-600 line-through">
-                          £{calculation.breakdown.originalCost.toFixed(2)}
-                        </div>
-                      )}
+                    <div className="font-semibold">
+                      {calculation.shippingCost === 0 ? 'FREE' : `£${calculation.shippingCost.toFixed(2)}`}
                     </div>
                   ) : (
                     <div className="text-sm text-gray-400">Calculating...</div>
                   )}
                 </div>
               </div>
-              
-              {calculation?.breakdown.freeShippingApplied && (
-                <div className="mt-2 text-xs text-green-600 font-medium">
-                  🎉 Free shipping applied!
-                </div>
-              )}
             </div>
           );
         })}
@@ -283,12 +268,6 @@ export default function ShippingOptions({
         {cartTotal >= 50 && (
           <div className="text-sm text-green-600 bg-green-50 p-3 rounded-lg">
             💡 You qualify for free standard shipping on orders over £50!
-          </div>
-        )}
-        
-        {cartTotal >= 75 && cartTotal < 50 && (
-          <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
-            💡 Spend £{(75 - cartTotal).toFixed(2)} more for 50% off express shipping!
           </div>
         )}
       </CardContent>

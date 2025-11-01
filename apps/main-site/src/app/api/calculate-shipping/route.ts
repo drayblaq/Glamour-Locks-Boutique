@@ -20,63 +20,18 @@ interface ShippingCalculationRequest {
   }>;
 }
 
-// Location-based shipping multipliers (admin configurable in production)
-const locationMultipliers = {
-  'UK': {
-    'London': 1.0,
-    'Manchester': 1.1,
-    'Birmingham': 1.1,
-    'default': 1.2
-  },
-  'US': {
-    'New York': 1.5,
-    'California': 1.7,
-    'Texas': 1.6,
-    'default': 1.8
-  },
-  'default': 2.0
-};
-
-// Base shipping rates
+// Fixed shipping rates (no location multipliers)
 const baseShippingRates = {
   'standard': 2.49,
-  'express': 9.99,
   'next-day': 7.55
 };
 
-function calculateLocationMultiplier(address: ShippingCalculationRequest['address']): number {
-  const country = address.country || 'UK';
-  const city = address.city || '';
-  
-  const countryRates = locationMultipliers[country as keyof typeof locationMultipliers] || locationMultipliers.default;
-  
-  if (typeof countryRates === 'object') {
-    return countryRates[city as keyof typeof countryRates] || countryRates.default;
-  }
-  
-  return countryRates;
-}
-
-function calculateWeightSurcharge(items: ShippingCalculationRequest['items']): number {
-  const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0.5), 0);
-  
-  // Add surcharge for heavy items (over 5kg)
-  if (totalWeight > 5) {
-    return Math.ceil((totalWeight - 5) / 2) * 2.50; // £2.50 per 2kg over 5kg
-  }
-  
-  return 0;
-}
+// Weight surcharge removed - fixed shipping prices
 
 function applyFreeShippingThreshold(cartTotal: number, shippingCost: number): number {
   // Free standard shipping over £50
   if (cartTotal >= 50 && shippingCost <= 2.49) {
     return 0;
-  }
-  
-  // 50% discount on express shipping over £75
-  if (cartTotal >= 75 && shippingCost > 2.49 && shippingCost <= 9.99) {
-    return shippingCost * 0.5;
   }
   
   return shippingCost;
@@ -90,20 +45,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     
-    // Get base shipping rate
+    // Get base shipping rate (fixed price, no multipliers)
     const baseRate = baseShippingRates[data.shippingOptionId as keyof typeof baseShippingRates];
     if (!baseRate) {
       return NextResponse.json({ error: 'Invalid shipping option' }, { status: 400 });
     }
     
-    // Calculate location multiplier
-    const locationMultiplier = calculateLocationMultiplier(data.address);
-    
-    // Calculate weight surcharge
-    const weightSurcharge = calculateWeightSurcharge(data.items || []);
-    
-    // Calculate total shipping cost
-    let shippingCost = (baseRate * locationMultiplier) + weightSurcharge;
+    // Calculate total shipping cost (fixed price, no location or weight multipliers)
+    let shippingCost = baseRate;
     
     // Apply free shipping thresholds
     const originalCost = shippingCost;
@@ -117,8 +66,8 @@ export async function POST(request: NextRequest) {
       shippingCost,
       breakdown: {
         baseRate,
-        locationMultiplier,
-        weightSurcharge,
+        locationMultiplier: 1.0,
+        weightSurcharge: 0,
         originalCost,
         discount: originalCost - shippingCost,
         freeShippingApplied: originalCost !== shippingCost
@@ -140,9 +89,6 @@ function getEstimatedDelivery(shippingOptionId: string, address: any): string {
   switch (shippingOptionId) {
     case 'standard':
       daysToAdd = 5;
-      break;
-    case 'express':
-      daysToAdd = 2;
       break;
     case 'next-day':
       daysToAdd = 1;
